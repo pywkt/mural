@@ -22,6 +22,9 @@ export type InfilledPath = {
 export type InfillDensity = 0 | 1 | 2 | 3 | 4;
 export const InfillDensities: InfillDensity[] = [0, 1, 2, 3, 4];
 
+export type InfillPattern = 'none' | 'horizontal' | 'vertical' | 'diagonal45' | 'diagonal135' | 'crosshatch' | 'concentric';
+export const InfillPatterns: InfillPattern[] = ['none', 'horizontal', 'vertical', 'diagonal45', 'diagonal135', 'crosshatch', 'concentric'];
+
 export namespace RequestTypes {
     export type RenderSVGRequest = {
         type: 'renderSvg',
@@ -33,6 +36,8 @@ export namespace RequestTypes {
         homeX: number,
         homeY: number,
         infillDensity: InfillDensity,
+        infillPattern: InfillPattern,
+        infillSpacing: number,
         flattenPaths: boolean,
     };
 

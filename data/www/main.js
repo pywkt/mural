@@ -255,6 +255,8 @@ function init() {
             homeX: currentState.homeX,
             homeY: currentState.homeY,
             infillDensity: getInfillDensity(),
+            infillPattern: getInfillPattern(),
+            infillSpacing: getInfillSpacing(),
             flattenPaths: getFlattenPaths(),
         }
 
@@ -299,7 +301,20 @@ function init() {
     }
 
 
-    $("#infillDensity,#turdSize,#flattenPathsCheckbox").on('input change', async function() {
+    $("#infillPattern").on('change', function() {
+        if ($(this).val() === 'none') {
+            $(".infillSpacingControl").hide();
+        } else {
+            $(".infillSpacingControl").show();
+        }
+    });
+
+    $("#infillSpacing").on('input', function() {
+        $("#infillSpacingValue").text($(this).val());
+    });
+
+    $("#infillPattern,#infillSpacing,#turdSize,#flattenPathsCheckbox").on('input change', async function() {
+        if (!rendererFn) return;
         activateProgressBar();
         $("#acceptSvg").attr("disabled", "disabled");
         await rendererFn();
@@ -586,12 +601,17 @@ function adaptToState(state) {
 }
 
 function getInfillDensity() {
-    const density = parseInt($("#infillDensity").val());
-    if ([0, 1, 2, 3, 4].includes(density)) {
-        return density;
-    } else {
-        throw new Error('Invalid density');
-    }
+    // Keep returning 0 for backward compat with worker validation
+    // Actual infill is now controlled by infillPattern + infillSpacing
+    return getInfillPattern() === 'none' ? 0 : 1;
+}
+
+function getInfillPattern() {
+    return $("#infillPattern").val();
+}
+
+function getInfillSpacing() {
+    return parseInt($("#infillSpacing").val());
 }
 
 function getTurdSize() {

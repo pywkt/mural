@@ -37,7 +37,7 @@ export async function renderSvgJsonToCommands(
     }
 
     updateStatusFn("Generating infill");
-    const pathsWithInfills = generateInfills(paths, request.infillDensity);
+    const pathsWithInfills = generateInfills(paths, request.infillPattern, request.infillSpacing);
 
     updateStatusFn("Optimizing paths");
     const optimizedPaths = optimizePaths(pathsWithInfills, request.homeX, request.homeY);

@@ -1,7 +1,7 @@
 import { renderCommandsToSvgJson } from "./toSvgJson";
 import { renderSvgJsonToCommands } from "./toCommands";
 import { vectorizeImageData } from './vectorizer';
-import { InfillDensities, RequestTypes } from "./types";
+import { InfillDensities, InfillPatterns, RequestTypes } from "./types";
 
 const updateStatusFn = (status: string) => {
     self.postMessage({
@@ -99,6 +99,14 @@ function isRenderSvgRequest(obj: any): obj is RequestTypes.RenderSVGRequest {
     }
 
     if (!('infillDensity' in obj) || typeof obj.infillDensity !== 'number' || !InfillDensities.includes(obj.infillDensity)) {
+        return false;
+    }
+
+    if (!('infillPattern' in obj) || typeof obj.infillPattern !== 'string' || !InfillPatterns.includes(obj.infillPattern)) {
+        return false;
+    }
+
+    if (!('infillSpacing' in obj) || typeof obj.infillSpacing !== 'number') {
         return false;
     }
 
