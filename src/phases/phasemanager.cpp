@@ -18,6 +18,7 @@ PhaseManager::PhaseManager(Movement* movement, Pen* pen, Runner* runner, AsyncWe
     beginDrawingPhase = new BeginDrawingPhase(this, runner, server);
 
     this->movement = movement;
+    this->pen = pen;
     reset();
 }
 
@@ -78,6 +79,7 @@ void PhaseManager::respondWithState(AsyncWebServerRequest *request) {
     root["homeY"] = homePosition.y;
     root["leftMotorInverted"] = movement->isLeftInverted();
     root["rightMotorInverted"] = movement->isRightInverted();
+    root["servoInverted"] = pen->isInverted();
 
     root.printTo(*response);
     request->send(response);

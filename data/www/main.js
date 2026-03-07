@@ -474,6 +474,10 @@ function init() {
         $.post("/setMotorInversion", {right: this.checked});
     });
 
+    $("#invertServo").change(function() {
+        $.post("/setServoInversion", {inverted: this.checked});
+    });
+
     $(".phaseBack").click(function() {
         const phase = $(this).data("phase");
         $(".muralSlide").hide();
@@ -568,6 +572,9 @@ function adaptToState(state) {
     }
     if (state.rightMotorInverted !== undefined) {
         $("#invertRightMotor").prop("checked", state.rightMotorInverted);
+    }
+    if (state.servoInverted !== undefined) {
+        $("#invertServo").prop("checked", state.servoInverted);
     }
 
     switch(state.phase) {
