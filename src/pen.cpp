@@ -47,11 +47,25 @@ Pen::Pen()
 {
     preferences.begin("mural_pen", false);
     inverted = preferences.getBool("inverted", false);
+    liftAmount = preferences.getInt("liftAmt", DEFAULT_LIFT_AMOUNT);
 
     servo = new Servo();
     servo->attach(2);
     servo->write(applyInversion(90));
     currentPosition = 90;
+}
+
+int Pen::getUpPosition() {
+    if (penDistance == -1) {
+        return 90;
+    }
+    if (inverted) {
+        int upPos = penDistance - liftAmount;
+        return max(upPos, 0);
+    } else {
+        int upPos = penDistance + liftAmount;
+        return min(upPos, 180);
+    }
 }
 
 int Pen::applyInversion(int angle) {
@@ -84,8 +98,18 @@ void Pen::slowUp() {
         throw std::invalid_argument("not ready");
     }
 
-    doSlowMove(this, currentPosition, 90, slowSpeedDegPerSec);
-    currentPosition = 90;
+    int upPos = getUpPosition();
+    doSlowMove(this, currentPosition, upPos, slowSpeedDegPerSec);
+    currentPosition = upPos;
+}
+
+void Pen::setLiftAmount(int amount) {
+    liftAmount = constrain(amount, 5, 90);
+    preferences.putInt("liftAmt", liftAmount);
+}
+
+int Pen::getLiftAmount() {
+    return liftAmount;
 }
 
 void Pen::slowDown() {

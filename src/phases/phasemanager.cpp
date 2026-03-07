@@ -80,6 +80,7 @@ void PhaseManager::respondWithState(AsyncWebServerRequest *request) {
     root["leftMotorInverted"] = movement->isLeftInverted();
     root["rightMotorInverted"] = movement->isRightInverted();
     root["servoInverted"] = pen->isInverted();
+    root["penLiftAmount"] = pen->getLiftAmount();
 
     root.printTo(*response);
     request->send(response);

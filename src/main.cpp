@@ -111,6 +111,14 @@ void setup()
     server.on("/resume", HTTP_POST, [](AsyncWebServerRequest *request)
               { phaseManager->getCurrentPhase()->resumeTopDistance(request); });
 
+    server.on("/setPenLift", HTTP_POST, [](AsyncWebServerRequest *request) {
+        if (request->hasParam("amount", true)) {
+            int amount = request->getParam("amount", true)->value().toInt();
+            pen->setLiftAmount(amount);
+        }
+        request->send(200);
+    });
+
     server.on("/setServoInversion", HTTP_POST, [](AsyncWebServerRequest *request) {
         if (request->hasParam("inverted", true)) {
             pen->setInverted(request->getParam("inverted", true)->value() == "true");

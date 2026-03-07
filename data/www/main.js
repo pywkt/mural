@@ -478,6 +478,14 @@ function init() {
         $.post("/setServoInversion", {inverted: this.checked});
     });
 
+    $("#penLiftAmount").on('input', function() {
+        $("#penLiftValue").text($(this).val());
+    });
+
+    $("#penLiftAmount").on('change', $.throttle(250, function() {
+        $.post("/setPenLift", {amount: $(this).val()});
+    }));
+
     $(".phaseBack").click(function() {
         const phase = $(this).data("phase");
         $(".muralSlide").hide();
@@ -576,6 +584,10 @@ function adaptToState(state) {
     if (state.servoInverted !== undefined) {
         $("#invertServo").prop("checked", state.servoInverted);
     }
+    if (state.penLiftAmount !== undefined) {
+        $("#penLiftAmount").val(state.penLiftAmount);
+        $("#penLiftValue").text(state.penLiftAmount);
+    }
 
     switch(state.phase) {
         case "RetractBelts":
@@ -593,7 +605,13 @@ function adaptToState(state) {
             }
             break;
         case "PenCalibration":
-            $.post("/setServo", {angle: 90});
+            if (state.servoInverted) {
+                $.post("/setServo", {angle: 0});
+                $("#servoRange").val(90);
+            } else {
+                $.post("/setServo", {angle: 90});
+                $("#servoRange").val(0);
+            }
             $("#penCalibrationSlide").show();
             break;
         case "SvgSelect":
