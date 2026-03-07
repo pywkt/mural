@@ -427,8 +427,24 @@ function init() {
         }
     });
 
+    $("#servoRangeTool").on('input', $.throttle(250, function (e) {
+        const angle = 90 - parseInt($(this).val());
+        $.post("/setServo", {angle: Math.max(0, Math.min(90, angle))});
+    }));
+
+    const servoToolStep = 5;
+    $("#servoMinusTool").click(function() {
+        $("#servoRangeTool")[0].stepDown(servoToolStep);
+        $("#servoRangeTool").trigger('input');
+    });
+
+    $("#servoPlusTool").click(function() {
+        $("#servoRangeTool")[0].stepUp(servoToolStep);
+        $("#servoRangeTool").trigger('input');
+    });
+
     $("#parkServoTool").click(function() {
-        $.post("/setServo", {angle: 0});
+        $("#servoRangeTool").val(0).trigger('input');
     });
 
     $("#estepsTool").click(function() {
