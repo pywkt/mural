@@ -451,6 +451,14 @@ function init() {
         $.post("/estepsCalibration", {});
     });
 
+    $("#invertLeftMotor").change(function() {
+        $.post("/setMotorInversion", {left: this.checked});
+    });
+
+    $("#invertRightMotor").change(function() {
+        $.post("/setMotorInversion", {right: this.checked});
+    });
+
     const toolsModal = $("#toolsModal")[0];
 
     toolsModal.addEventListener('hidden.bs.modal', function (event) {
@@ -527,6 +535,14 @@ function verifyUpload(state) {
 function adaptToState(state) {
     $(".muralSlide").hide();
     currentState = state;
+
+    if (state.leftMotorInverted !== undefined) {
+        $("#invertLeftMotor").prop("checked", state.leftMotorInverted);
+    }
+    if (state.rightMotorInverted !== undefined) {
+        $("#invertRightMotor").prop("checked", state.rightMotorInverted);
+    }
+
     switch(state.phase) {
         case "RetractBelts":
             $("#retractBeltsSlide").show();

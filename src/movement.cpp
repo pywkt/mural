@@ -6,15 +6,20 @@ Movement::Movement(Display *display)
 {
     this->display = display;
    
+    preferences.begin("mural", false);
+    leftInverted = preferences.getBool("leftInv", true);
+    rightInverted = preferences.getBool("rightInv", false);
+
     leftMotor = new AccelStepper(AccelStepper::DRIVER, LEFT_STEP_PIN, LEFT_DIR_PIN);
     leftMotor->setEnablePin(LEFT_ENABLE_PIN);
     leftMotor->setMaxSpeed(moveSpeedSteps);
-    leftMotor->setPinsInverted(false);
+    leftMotor->setPinsInverted(leftInverted);
     leftMotor->disableOutputs();
 
     rightMotor = new AccelStepper(AccelStepper::DRIVER, RIGHT_STEP_PIN, RIGHT_DIR_PIN);
     rightMotor->setEnablePin(RIGHT_ENABLE_PIN);
     rightMotor->setMaxSpeed(moveSpeedSteps);
+    rightMotor->setPinsInverted(rightInverted);
     rightMotor->disableOutputs();
 
     topDistance = -1;
@@ -435,4 +440,24 @@ bool Movement::hasStartedHoming() {
 
 int Movement::getTopDistance() {
     return topDistance;
+}
+
+void Movement::setLeftInverted(bool inverted) {
+    leftInverted = inverted;
+    leftMotor->setPinsInverted(leftInverted);
+    preferences.putBool("leftInv", leftInverted);
+}
+
+void Movement::setRightInverted(bool inverted) {
+    rightInverted = inverted;
+    rightMotor->setPinsInverted(rightInverted);
+    preferences.putBool("rightInv", rightInverted);
+}
+
+bool Movement::isLeftInverted() {
+    return leftInverted;
+}
+
+bool Movement::isRightInverted() {
+    return rightInverted;
 }

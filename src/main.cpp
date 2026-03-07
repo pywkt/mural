@@ -111,6 +111,16 @@ void setup()
     server.on("/resume", HTTP_POST, [](AsyncWebServerRequest *request)
               { phaseManager->getCurrentPhase()->resumeTopDistance(request); });
 
+    server.on("/setMotorInversion", HTTP_POST, [](AsyncWebServerRequest *request) {
+        if (request->hasParam("left", true)) {
+            movement->setLeftInverted(request->getParam("left", true)->value() == "true");
+        }
+        if (request->hasParam("right", true)) {
+            movement->setRightInverted(request->getParam("right", true)->value() == "true");
+        }
+        request->send(200);
+    });
+
     server.on("/getState", HTTP_GET, [](AsyncWebServerRequest *request)
               { handleGetState(request); });
 

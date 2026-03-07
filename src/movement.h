@@ -2,7 +2,8 @@
 #define Movement_h
 
 #include "AccelStepper.h"
-#include "Arduino.h" 
+#include "Arduino.h"
+#include <Preferences.h>
 #include "display.h"
 
 // Motor driver parameters.
@@ -63,6 +64,9 @@ private:
     AccelStepper *leftMotor;
     AccelStepper *rightMotor;
     Display *display;
+    Preferences preferences;
+    bool leftInverted;
+    bool rightInverted;
     void setOrigin();
 
     struct Lengths {
@@ -123,6 +127,11 @@ public:
 
     Point getHomeCoordinates();
     void disableMotors();
+
+    void setLeftInverted(bool inverted);
+    void setRightInverted(bool inverted);
+    bool isLeftInverted();
+    bool isRightInverted();
 };
 
 #endif

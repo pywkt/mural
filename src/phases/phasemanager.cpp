@@ -76,6 +76,8 @@ void PhaseManager::respondWithState(AsyncWebServerRequest *request) {
     root["safeWidth"] = safeWidth;
     root["homeX"] = homePosition.x;
     root["homeY"] = homePosition.y;
+    root["leftMotorInverted"] = movement->isLeftInverted();
+    root["rightMotorInverted"] = movement->isRightInverted();
 
     root.printTo(*response);
     request->send(response);
