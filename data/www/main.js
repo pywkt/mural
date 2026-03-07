@@ -459,6 +459,18 @@ function init() {
         $.post("/setMotorInversion", {right: this.checked});
     });
 
+    $(".phaseBack").click(function() {
+        const phase = $(this).data("phase");
+        $(".muralSlide").hide();
+        $("#loadingSlide").show();
+        $.post("/setPhase", {phase}, function(state) {
+            adaptToState(state);
+        }).fail(function() {
+            alert("Failed to go back");
+            location.reload();
+        });
+    });
+
     const toolsModal = $("#toolsModal")[0];
 
     toolsModal.addEventListener('hidden.bs.modal', function (event) {

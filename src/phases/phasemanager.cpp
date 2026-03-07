@@ -86,3 +86,14 @@ void PhaseManager::respondWithState(AsyncWebServerRequest *request) {
 void PhaseManager::reset() {
     setPhase(PhaseManager::SetTopDistance);
 }
+
+bool PhaseManager::setPhaseByName(const String& name) {
+    if (name == "SetTopDistance") { setPhase(SetTopDistance); }
+    else if (name == "SvgSelect") { setPhase(SvgSelect); }
+    else if (name == "RetractBelts") { setPhase(RetractBelts); }
+    else if (name == "ExtendToHome") { setPhase(ExtendToHome); }
+    else if (name == "PenCalibration") { setPhase(PenCalibration); }
+    else if (name == "BeginDrawing") { setPhase(BeginDrawing); }
+    else { return false; }
+    return true;
+}

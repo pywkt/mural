@@ -22,5 +22,6 @@ class PhaseManager {
     void setPhase(PhaseNames name);
     void respondWithState(AsyncWebServerRequest *request);
     void reset();
+    bool setPhaseByName(const String& name);
 };
 #endif

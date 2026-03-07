@@ -121,6 +121,19 @@ void setup()
         request->send(200);
     });
 
+    server.on("/setPhase", HTTP_POST, [](AsyncWebServerRequest *request) {
+        if (request->hasParam("phase", true)) {
+            String phase = request->getParam("phase", true)->value();
+            if (phaseManager->setPhaseByName(phase)) {
+                phaseManager->respondWithState(request);
+            } else {
+                request->send(400, "text/plain", "Invalid phase");
+            }
+        } else {
+            request->send(400, "text/plain", "Missing phase parameter");
+        }
+    });
+
     server.on("/getState", HTTP_GET, [](AsyncWebServerRequest *request)
               { handleGetState(request); });
 
