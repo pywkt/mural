@@ -51,8 +51,9 @@ Pen::Pen()
 
     servo = new Servo();
     servo->attach(2);
-    servo->write(applyInversion(90));
-    currentPosition = 90;
+    int startAngle = inverted ? 0 : 90;
+    servo->write(applyInversion(startAngle));
+    currentPosition = startAngle;
 }
 
 int Pen::getUpPosition() {
