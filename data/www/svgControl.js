@@ -13,11 +13,11 @@ export function initSvgControl() {
     $("#zoomIn").click(function() {
         requestChangeInTransform("in");
     });
-    
+
     $("#zoomOut").click(function() {
         requestChangeInTransform("out");
     });
-    
+
     $("#resetTransform").click(function() {
         requestChangeInTransform("reset");
     });
@@ -70,11 +70,34 @@ let originalSvg;
 let transformedSvg;
 let currentWidth;
 let currentHeight;
+let safeWidth;
+let homeY;
+let paperConstraint = null; // {width, height} in mm, or null for full area
+let drawingXOffset = 0;
+let drawingYOffset = 0;
+
+export function setPaperSize(width, height) {
+    if (width && height && width > 0 && height > 0) {
+        paperConstraint = {width, height};
+    } else {
+        paperConstraint = null;
+    }
+}
+
+export function getDrawingXOffset() {
+    return drawingXOffset;
+}
+
+export function getDrawingYOffset() {
+    return drawingYOffset;
+}
+
 export function setSvgString(svgString, currentState) {
     resetTransform();
 
     originalSvg = new DOMParser().parseFromString(svgString, 'image/svg+xml');
-    currentWidth = currentState.safeWidth;
+    safeWidth = currentState.safeWidth;
+    homeY = currentState.homeY;
     normalizeSvg();
     applyTransform();
 }
@@ -88,7 +111,7 @@ function normalizeSvg() {
         width = convertUnitsToPx(svgElement.getAttribute("width"));
         height = convertUnitsToPx(svgElement.getAttribute("height"));
     }
-    
+
     if (svgElement.hasAttribute("viewBox")) {
         if (!width || !height) {
             const viewBox = svgElement.getAttribute("viewBox").split(/[\s,]/).filter(s => s != "");;
@@ -98,12 +121,43 @@ function normalizeSvg() {
     } else {
         svgElement.setAttribute("viewBox", `0, 0, ${width}, ${height}`);
     }
-    
+
     if (!width || !height) {
         throw new Error("Invalid SVG");
     }
 
-    currentHeight = currentWidth / width * height;
+    const svgAspect = width / height;
+
+    // Determine max drawing dimensions
+    let maxWidth = safeWidth;
+    let maxHeight = Infinity;
+
+    if (paperConstraint) {
+        maxWidth = Math.min(paperConstraint.width, safeWidth);
+        maxHeight = paperConstraint.height;
+    }
+
+    // Fit SVG within max dimensions preserving aspect ratio
+    currentWidth = maxWidth;
+    currentHeight = maxWidth / svgAspect;
+
+    if (currentHeight > maxHeight) {
+        currentHeight = maxHeight;
+        currentWidth = maxHeight * svgAspect;
+    }
+
+    // Center horizontally within drawing area
+    drawingXOffset = (safeWidth - currentWidth) / 2;
+
+    // Center vertically around home position when paper size is set
+    if (paperConstraint && homeY) {
+        drawingYOffset = homeY - currentHeight / 2;
+        if (drawingYOffset < 0) {
+            drawingYOffset = 0;
+        }
+    } else {
+        drawingYOffset = 0;
+    }
 
     svgElement.setAttribute("width", currentWidth);
     svgElement.setAttribute("height", currentHeight);
@@ -158,7 +212,7 @@ function applyTransform() {
 
     const [clonedSvg, newHeight] = makeTransformedSvgWithHeight();
     currentHeight = newHeight;
-    
+
     const svgString = new XMLSerializer().serializeToString(clonedSvg);
     const svgDataURL = `data:image/svg+xml;base64,${btoa(svgString)}`;
     $("#sourceSvg")[0].src = svgDataURL;
@@ -207,7 +261,7 @@ function updateTransformText() {
 export async function getCurrentSvgImageData() {
     const scaledHeight = currentHeight * renderScale;
     const scaledWidth = currentWidth * renderScale;
-    
+
     const svgString = new XMLSerializer().serializeToString(transformedSvg);
 
     const canvas = new OffscreenCanvas(scaledWidth, scaledHeight);
@@ -217,9 +271,9 @@ export async function getCurrentSvgImageData() {
     const bitmap = await createImageBitmap(img, {resizeHeight: scaledHeight, resizeWidth: scaledWidth});
 
     canvasContext.drawImage(bitmap, 0, 0, scaledWidth, scaledHeight);
-    
+
     const imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
-    
+
     return imageData;
 }
 
@@ -248,18 +302,15 @@ export function getSvgJson(svgString) {
 export function convertJsonToDataURL(json, width, height) {
     $("#previewCanvas").remove();
     $(document.body).append(`<canvas id="previewCanvas" width="${width}" height="${height}" style="display: none;"></canvas>`);
-    
+
     paper.setup($("#previewCanvas")[0]);
     paper.project.importJSON(json);
     paper.view.draw();
 
     const dataURL = $("#previewCanvas")[0].toDataURL();
-    
+
     paper.project.remove();
     $("#previewCanvas").remove();
 
     return dataURL;
 }
-
-
-

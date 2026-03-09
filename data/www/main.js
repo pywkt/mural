@@ -58,6 +58,16 @@ function init() {
         doneWithPhase();
     });
 
+    $("#distanceInput").on('input', function() {
+        const val = parseInt($(this).val());
+        if (!isNaN(val) && val > 0) {
+            const drawWidth = Math.round(val * 0.6);
+            $("#drawingAreaInfo").text(`Drawing area: ${drawWidth}mm wide`);
+        } else {
+            $("#drawingAreaInfo").text('');
+        }
+    });
+
     $("#setDistance").click(function() {
         const inputValue = parseInt($("#distanceInput").val());
         if (isNaN(inputValue)) {
@@ -137,6 +147,70 @@ function init() {
         });
     });
 
+    const paperSizes = {
+        'full': null,
+        'letter-p': {width: 216, height: 279},
+        'letter-l': {width: 279, height: 216},
+        'a4-p': {width: 210, height: 297},
+        'a4-l': {width: 297, height: 210},
+        'a3-p': {width: 297, height: 420},
+        'a3-l': {width: 420, height: 297},
+        'custom': null,
+    };
+
+    function updatePaperSizeInfo() {
+        const xOff = svgControl.getDrawingXOffset();
+        const yOff = svgControl.getDrawingYOffset();
+        const w = Math.round(svgControl.getTargetWidth());
+        const h = Math.round(svgControl.getTargetHeight());
+        if (xOff > 0 || yOff > 0) {
+            $("#paperSizeInfo").text(`Drawing: ${w} \u00d7 ${h}mm, centered on home position`);
+        } else {
+            $("#paperSizeInfo").text(`Drawing: ${w} \u00d7 ${h}mm`);
+        }
+    }
+
+    function applyPaperSize() {
+        const val = $("#paperSize").val();
+        if (val === 'custom') {
+            const w = parseFloat($("#customPaperWidth").val());
+            const h = parseFloat($("#customPaperHeight").val());
+            svgControl.setPaperSize(w, h);
+        } else {
+            const size = paperSizes[val];
+            if (size) {
+                svgControl.setPaperSize(size.width, size.height);
+            } else {
+                svgControl.setPaperSize(null, null);
+            }
+        }
+        // Re-apply SVG if one is loaded
+        reloadSvgIfLoaded();
+    }
+
+    function reloadSvgIfLoaded() {
+        const files = $("#uploadSvg")[0].files;
+        if (files && files.length > 0) {
+            files[0].text().then(function(svgString) {
+                svgControl.setSvgString(svgString, currentState);
+                updatePaperSizeInfo();
+            });
+        }
+    }
+
+    $("#paperSize").change(function() {
+        if ($(this).val() === 'custom') {
+            $("#customPaperInputs").show();
+        } else {
+            $("#customPaperInputs").hide();
+            applyPaperSize();
+        }
+    });
+
+    $("#customPaperWidth, #customPaperHeight").on('change', function() {
+        applyPaperSize();
+    });
+
     async function getUploadedSvgString() {
         const [file] = $("#uploadSvg")[0].files;
         if (file) {
@@ -150,6 +224,7 @@ function init() {
         const svgString = await getUploadedSvgString();
         if (svgString) {
             svgControl.setSvgString(svgString, currentState);
+            updatePaperSizeInfo();
 
             $(".svg-control").show();
             $("#preview").removeAttr("disabled");
@@ -158,6 +233,7 @@ function init() {
             $(".svg-control").hide();
             $("#infillDensity").val(0);
             $("#turdSize").val(2);
+            $("#paperSizeInfo").text('');
         }
     });
 
@@ -252,8 +328,8 @@ function init() {
             height: svgControl.getTargetHeight(),
             svgWidth,
             svgHeight,
-            homeX: currentState.homeX,
-            homeY: currentState.homeY,
+            homeX: currentState.homeX - svgControl.getDrawingXOffset(),
+            homeY: currentState.homeY - svgControl.getDrawingYOffset(),
             infillDensity: getInfillDensity(),
             infillPattern: getInfillPattern(),
             infillSpacing: getInfillSpacing(),
@@ -266,7 +342,23 @@ function init() {
             } else if (e.data.type === 'renderer') {
                 console.log("Worker finished!");
 
-                uploadConvertedCommands = e.data.payload.commands.join('\n');
+                const xOffset = svgControl.getDrawingXOffset();
+                const yOffset = svgControl.getDrawingYOffset();
+                const hasOffset = xOffset > 0 || yOffset > 0;
+                const offsetCommands = hasOffset
+                    ? e.data.payload.commands.map(function(cmd) {
+                        if (typeof cmd === 'string' && /^[\d.-]/.test(cmd)) {
+                            const parts = cmd.split(' ');
+                            if (parts.length === 2) {
+                                const x = parseFloat(parts[0]) + xOffset;
+                                const y = parseFloat(parts[1]) + yOffset;
+                                return x + ' ' + y;
+                            }
+                        }
+                        return cmd;
+                    })
+                    : e.data.payload.commands;
+                uploadConvertedCommands = offsetCommands.join('\n');
                 const resultSvgJson = e.data.payload.svgJson;
                 const resultDataUrl = svgControl.convertJsonToDataURL(resultSvgJson, svgControl.getTargetWidth(), svgControl.getTargetHeight());
 
@@ -594,6 +686,10 @@ function adaptToState(state) {
             $("#retractBeltsSlide").show();
             break;
         case "SetTopDistance":
+            if (state.topDistance > 0) {
+                $("#distanceInput").val(state.topDistance);
+                $("#drawingAreaInfo").text(`Drawing area: ${Math.round(state.topDistance * 0.6)}mm wide`);
+            }
             $("#distanceBetweenAnchorsSlide").show();
             break;
         case "ExtendToHome":
