@@ -14,7 +14,7 @@ PhaseManager::PhaseManager(Movement* movement, Pen* pen, Runner* runner, AsyncWe
     setTopDistancePhase = new SetTopDistancePhase(this, movement, pen);
     extendToHomePhase = new ExtendToHomePhase(this, movement);
     penCalibrationPhase = new PenCalibrationPhase(this, pen);
-    svgSelectPhase = new SvgSelectPhase(this);
+    svgSelectPhase = new SvgSelectPhase(this, movement, pen);
     beginDrawingPhase = new BeginDrawingPhase(this, runner, server);
 
     this->movement = movement;
@@ -81,6 +81,8 @@ void PhaseManager::respondWithState(AsyncWebServerRequest *request) {
     root["rightMotorInverted"] = movement->isRightInverted();
     root["servoInverted"] = pen->isInverted();
     root["penLiftAmount"] = pen->getLiftAmount();
+    root["savedTopDistance"] = movement->getSavedTopDistance();
+    root["savedPenDistance"] = pen->getSavedPenDistance();
 
     root.printTo(*response);
     request->send(response);

@@ -10,6 +10,7 @@ class Pen {
     bool inverted;
     int liftAmount;
     int penDistance = -1;
+    int cachedSavedPenDistance;
     int slowSpeedDegPerSec = 90;
     int currentPosition = 90;
     int applyInversion(int angle);
@@ -25,5 +26,8 @@ class Pen {
     bool isInverted();
     void setLiftAmount(int amount);
     int getLiftAmount();
+    bool isCalibrated();
+    int getSavedPenDistance();
+    void restorePenDistance();
 };
 #endif

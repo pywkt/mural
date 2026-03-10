@@ -9,6 +9,7 @@ Movement::Movement(Display *display)
     preferences.begin("mural", false);
     leftInverted = preferences.getBool("leftInv", true);
     rightInverted = preferences.getBool("rightInv", false);
+    cachedSavedTopDistance = preferences.getInt("topDist", -1);
 
     leftMotor = new AccelStepper(AccelStepper::DRIVER, LEFT_STEP_PIN, LEFT_DIR_PIN);
     leftMotor->setEnablePin(LEFT_ENABLE_PIN);
@@ -36,6 +37,9 @@ void Movement::setTopDistance(const int distance) {
     minSafeY = safeYFraction * topDistance;         // = top_margin * d_pins [mm]
     minSafeXOffset = safeXFraction * topDistance;   // = side_margin * d_pins [mm]
     width = topDistance - 2 * minSafeXOffset;       // width of the drawing area [mm]
+
+    cachedSavedTopDistance = topDistance;
+    preferences.putInt("topDist", topDistance);
 };
 
 void Movement::resumeTopDistance(int distance /* = d_pin in mm */) {
@@ -442,6 +446,10 @@ int Movement::getTopDistance() {
     return topDistance;
 }
 
+int Movement::getSavedTopDistance() {
+    return cachedSavedTopDistance;
+}
+
 void Movement::setLeftInverted(bool inverted) {
     leftInverted = inverted;
     leftMotor->setPinsInverted(leftInverted);
@@ -452,6 +460,10 @@ void Movement::setRightInverted(bool inverted) {
     rightInverted = inverted;
     rightMotor->setPinsInverted(rightInverted);
     preferences.putBool("rightInv", rightInverted);
+}
+
+bool Movement::isHomed() {
+    return homed;
 }
 
 bool Movement::isLeftInverted() {

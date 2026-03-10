@@ -15,6 +15,16 @@ void SetTopDistancePhase::setTopDistance(AsyncWebServerRequest *request) {
     manager->respondWithState(request);
 }
 
+void SetTopDistancePhase::resumeTopDistance(AsyncWebServerRequest *request) {
+    const AsyncWebParameter* p = request->getParam(0);
+    int distance = p->value().toInt();
+    Serial.println("Resuming with saved distance");
+    movement->resumeTopDistance(distance);
+    pen->restorePenDistance();
+    manager->setPhase(PhaseManager::SvgSelect);
+    manager->respondWithState(request);
+}
+
 void SetTopDistancePhase::setServo(AsyncWebServerRequest *request) {
     const AsyncWebParameter* p = request->getParam(0);
     int angle = p->value().toInt();

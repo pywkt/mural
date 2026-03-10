@@ -1,8 +1,10 @@
 #include "svgselectphase.h"
 #include "LittleFS.h"
 
-SvgSelectPhase::SvgSelectPhase(PhaseManager* manager) {
+SvgSelectPhase::SvgSelectPhase(PhaseManager* manager, Movement* movement, Pen* pen) {
     this->manager = manager;
+    this->movement = movement;
+    this->pen = pen;
 }
 
 void SvgSelectPhase::handleUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
@@ -36,7 +38,12 @@ void SvgSelectPhase::handleUpload(AsyncWebServerRequest *request, String filenam
     {
         request->_tempFile.close();
         Serial.println("Upload finished");
-        manager->setPhase(PhaseManager::RetractBelts);
+        if (movement->isHomed()) {
+            Serial.println("Already homed, skipping to PenCalibration");
+            manager->setPhase(PhaseManager::PenCalibration);
+        } else {
+            manager->setPhase(PhaseManager::RetractBelts);
+        }
     }
 }
 

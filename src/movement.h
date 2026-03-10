@@ -67,6 +67,7 @@ private:
     Preferences preferences;
     bool leftInverted;
     bool rightInverted;
+    int cachedSavedTopDistance;
     void setOrigin();
 
     struct Lengths {
@@ -116,6 +117,7 @@ public:
     void setTopDistance(const int distance);
     void resumeTopDistance(const int distance);
     int getTopDistance();
+    int getSavedTopDistance();
     void leftStepper(const int dir);
     void rightStepper(const int dir);
     int extendToHome();
@@ -130,6 +132,7 @@ public:
 
     void setLeftInverted(bool inverted);
     void setRightInverted(bool inverted);
+    bool isHomed();
     bool isLeftInverted();
     bool isRightInverted();
 };

@@ -81,6 +81,18 @@ function init() {
         });
     });
 
+    $("#quickStart").click(function() {
+        const savedDistance = currentState.savedTopDistance;
+        if (!savedDistance || savedDistance <= 0) {
+            return;
+        }
+        doneWithPhase({
+            url: "/resume",
+            data: {distance: savedDistance},
+            commandName: "Quick Start",
+        });
+    });
+
     $("#leftMotorToggle").change(function() {
         if (this.checked) {
             client.leftRetractDown(); 
@@ -505,6 +517,22 @@ function init() {
         $(".muralSlide").hide();
         $("#drawingBegan").show();
         $.post("/run", {});
+
+        const pollInterval = setInterval(function() {
+            $.get("/getState")
+                .done(function(state) {
+                    if (state.phase !== "BeginDrawing") {
+                        clearInterval(pollInterval);
+                        $("#drawingStatusTitle").text("Drawing Complete");
+                        $("#drawingStatusText").text("The drawing has finished and the plotter has returned to the home position.");
+                        $("#newDrawing").show();
+                        currentState = state;
+                    }
+                })
+                .fail(function() {
+                    // ESP may be busy or restarting, keep polling
+                });
+        }, 5000);
     });
 
     $("#reset").click(function() {
@@ -689,6 +717,12 @@ function adaptToState(state) {
             if (state.topDistance > 0) {
                 $("#distanceInput").val(state.topDistance);
                 $("#drawingAreaInfo").text(`Drawing area: ${Math.round(state.topDistance * 0.6)}mm wide`);
+            } else if (state.savedTopDistance > 0) {
+                $("#distanceInput").val(state.savedTopDistance);
+                $("#drawingAreaInfo").text(`Drawing area: ${Math.round(state.savedTopDistance * 0.6)}mm wide`);
+            }
+            if (state.savedTopDistance > 0) {
+                $("#quickStartSection").show();
             }
             $("#distanceBetweenAnchorsSlide").show();
             break;

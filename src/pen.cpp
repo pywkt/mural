@@ -48,6 +48,7 @@ Pen::Pen()
     preferences.begin("mural_pen", false);
     inverted = preferences.getBool("inverted", false);
     liftAmount = preferences.getInt("liftAmt", DEFAULT_LIFT_AMOUNT);
+    cachedSavedPenDistance = preferences.getInt("penDist", -1);
 
     servo = new Servo();
     servo->attach(2);
@@ -92,6 +93,23 @@ bool Pen::isInverted() {
 void Pen::setPenDistance(int value) {
     Serial.println("Pen distance angle set to " + String(value));
     this->penDistance = value;
+    cachedSavedPenDistance = value;
+    preferences.putInt("penDist", value);
+}
+
+bool Pen::isCalibrated() {
+    return penDistance != -1;
+}
+
+int Pen::getSavedPenDistance() {
+    return cachedSavedPenDistance;
+}
+
+void Pen::restorePenDistance() {
+    int saved = getSavedPenDistance();
+    if (saved != -1) {
+        penDistance = saved;
+    }
 }
 
 void Pen::slowUp() {

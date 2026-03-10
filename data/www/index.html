@@ -95,8 +95,15 @@
         <h3 class="mb-2 fw-normal">Distance between hangers</h3>
         <h6 class="mb-5"><small class="text-muted">Distance between the two nails on which you are hanging Mural, in millimeters</small></h6>
         <input type="number" class="form-control mb-3" id="distanceInput">
-        <h6 class="mb-5"><small class="text-muted" id="drawingAreaInfo"></small></h6>
-        <button class="w-100 btn btn-lg btn-primary mb-5" id="setDistance">Set distance</button>
+        <h6 class="mb-3"><small class="text-muted" id="drawingAreaInfo"></small></h6>
+        <button class="w-100 btn btn-lg btn-primary mb-3" id="setDistance">Set distance</button>
+        <div id="quickStartSection" style="display:none;">
+          <hr>
+          <button class="w-100 btn btn-lg btn-warning mb-2" id="quickStart">Quick Start</button>
+          <div class="alert alert-warning mb-3" role="alert">
+            <strong>Warning:</strong> Only use Quick Start if a previous drawing has completed successfully and the plotter is still hanging at the home position. Using this when the plotter has been moved or removed will cause incorrect positioning.
+          </div>
+        </div>
         <div style="position:fixed; top: 10px; right: 10px;" data-bs-toggle="modal" data-bs-target="#toolsModal"><i class="bi-gear fs-2"></i></div>
       </div>
       <div id="extendToHomeSlide" class="muralSlide" style="display:none;">
@@ -221,8 +228,9 @@
         <button class="w-100 btn btn-lg btn-secondary mb-5" id="reset">Reset</button>
       </div>
       <div id="drawingBegan" class="muralSlide" style="display: none;">
-        <h3 class="mb-2 fw-normal">Drawing Started</h3>
-        <h6 class="mb-5"><small class="text-muted">Mural will not be accessible via your browser while the drawing is in progress. Please refresh the page once the drawing is finished.</small></h6>
+        <h3 class="mb-2 fw-normal" id="drawingStatusTitle">Drawing Started</h3>
+        <h6 class="mb-5"><small class="text-muted" id="drawingStatusText">Drawing in progress...</small></h6>
+        <button class="w-100 btn btn-lg btn-primary mb-2" id="newDrawing" style="display:none;" onclick="location.reload()">Start New Drawing</button>
       </div>
       <div class="mt-5"><a href="https://github.com/nikivanov/mural" class="link-primary">Mural</a></div>
   </main>
