@@ -75,6 +75,7 @@ let homeY;
 let paperConstraint = null; // {width, height} in mm, or null for full area
 let drawingXOffset = 0;
 let drawingYOffset = 0;
+let margin = {x: 0, y: 0};
 
 export function setPaperSize(width, height) {
     if (width && height && width > 0 && height > 0) {
@@ -90,6 +91,10 @@ export function getDrawingXOffset() {
 
 export function getDrawingYOffset() {
     return drawingYOffset;
+}
+
+export function setMargin(x, y) {
+    margin = {x: x || 0, y: y || 0};
 }
 
 export function setSvgString(svgString, currentState) {
@@ -128,13 +133,13 @@ function normalizeSvg() {
 
     const svgAspect = width / height;
 
-    // Determine max drawing dimensions
-    let maxWidth = safeWidth;
+    // Determine max drawing dimensions, accounting for margins
+    let maxWidth = safeWidth - 2 * margin.x;
     let maxHeight = Infinity;
 
     if (paperConstraint) {
-        maxWidth = Math.min(paperConstraint.width, safeWidth);
-        maxHeight = paperConstraint.height;
+        maxWidth = Math.min(paperConstraint.width - 2 * margin.x, safeWidth - 2 * margin.x);
+        maxHeight = paperConstraint.height - 2 * margin.y;
     }
 
     // Fit SVG within max dimensions preserving aspect ratio

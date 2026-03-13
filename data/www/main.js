@@ -210,6 +210,74 @@ function init() {
         }
     }
 
+    function centerRawCommands(text, state) {
+        const lines = text.split('\n');
+        const safeWidth = state.safeWidth;
+        const homeY = state.homeY;
+
+        // Determine paper constraint from dropdown
+        const paperVal = $("#paperSize").val();
+        let paperSize = paperSizes[paperVal];
+        if (paperVal === 'custom') {
+            const w = parseFloat($("#customPaperWidth").val());
+            const h = parseFloat($("#customPaperHeight").val());
+            if (w > 0 && h > 0) paperSize = {width: w, height: h};
+        }
+
+        // Find bounding box of coordinate lines
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        for (const line of lines) {
+            if (/^[\d.-]/.test(line)) {
+                const parts = line.split(' ');
+                if (parts.length === 2) {
+                    const x = parseFloat(parts[0]);
+                    const y = parseFloat(parts[1]);
+                    if (!isNaN(x) && !isNaN(y)) {
+                        minX = Math.min(minX, x);
+                        maxX = Math.max(maxX, x);
+                        minY = Math.min(minY, y);
+                        maxY = Math.max(maxY, y);
+                    }
+                }
+            }
+        }
+
+        if (minX === Infinity) return text; // no coordinates found
+
+        const drawingWidth = maxX - minX;
+        const drawingHeight = maxY - minY;
+
+        const mx = parseFloat($("#marginX").val()) || 0;
+        const my = parseFloat($("#marginY").val()) || 0;
+
+        // Compute centering offsets, accounting for margins
+        let maxWidth = safeWidth - 2 * mx;
+        if (paperSize) maxWidth = Math.min(paperSize.width - 2 * mx, safeWidth - 2 * mx);
+
+        const xOffset = (maxWidth - drawingWidth) / 2 + (safeWidth - maxWidth) / 2 - minX;
+
+        let yOffset = -minY + my;
+        if (paperSize && homeY) {
+            yOffset = homeY - drawingHeight / 2 - minY;
+            if (yOffset + minY < my) yOffset = -minY + my;
+        }
+
+        // Apply offsets to coordinate lines
+        return lines.map(function(line) {
+            if (/^[\d.-]/.test(line)) {
+                const parts = line.split(' ');
+                if (parts.length === 2) {
+                    const x = parseFloat(parts[0]);
+                    const y = parseFloat(parts[1]);
+                    if (!isNaN(x) && !isNaN(y)) {
+                        return (x + xOffset) + ' ' + (y + yOffset);
+                    }
+                }
+            }
+            return line;
+        }).join('\n');
+    }
+
     $("#paperSize").change(function() {
         if ($(this).val() === 'custom') {
             $("#customPaperInputs").show();
@@ -223,6 +291,14 @@ function init() {
         applyPaperSize();
     });
 
+    $("#marginX, #marginY").on('change', function() {
+        svgControl.setMargin(
+            parseFloat($("#marginX").val()) || 0,
+            parseFloat($("#marginY").val()) || 0
+        );
+        reloadSvgIfLoaded();
+    });
+
     async function getUploadedSvgString() {
         const [file] = $("#uploadSvg")[0].files;
         if (file) {
@@ -231,6 +307,59 @@ function init() {
             return null;
         }
     }
+
+    $("#uploadRawCommands").change(async function() {
+        const [file] = this.files;
+        if (!file) return;
+
+        let text = await file.text();
+        if (!text.startsWith('d')) {
+            alert('Invalid command file: must start with a distance header (d...)');
+            $(this).val('');
+            return;
+        }
+
+        if ($("#centerRawCommands").is(":checked") && currentState) {
+            text = centerRawCommands(text, currentState);
+        }
+
+        uploadConvertedCommands = text;
+
+        const commandsBlob = new Blob([text], { type: "text/plain" });
+        const formData = new FormData();
+        formData.append("commands", commandsBlob);
+
+        $(".muralSlide").hide();
+        $("#uploadProgress").show();
+
+        $.ajax({
+            url: "/uploadCommands",
+            data: formData,
+            processData: false,
+            contentType: false,
+            type: 'POST',
+            success: function(data) {
+                verifyUpload(data);
+            },
+            error: function(err) {
+                alert('Upload to Mural failed! ' + err);
+                window.location.reload();
+            },
+            xhr: function () {
+                var xhr = new window.XMLHttpRequest();
+                xhr.upload.addEventListener("progress", function (evt) {
+                    if (evt.lengthComputable) {
+                        var percentComplete = evt.loaded / evt.total;
+                        percentComplete = parseInt(percentComplete * 100);
+                        $("#uploadProgress").attr("aria-valuemax", evt.total.toString());
+                        $("#uploadProgress").attr("aria-valuenow", evt.loaded.toString());
+                        $("#uploadProgress > .progress-bar").attr("style", `width: ${percentComplete}%`);
+                    }
+                }, false);
+                return xhr;
+            },
+        });
+    });
 
     $("#uploadSvg").change(async function() {
         const svgString = await getUploadedSvgString();
