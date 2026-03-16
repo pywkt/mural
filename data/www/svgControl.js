@@ -10,15 +10,15 @@ document.body.addEventListener("click", function(e) {
 export const renderScale = 2;
 
 export function initSvgControl() {
-    $("#zoomIn").click(function() {
+    document.getElementById("zoomIn").addEventListener("click", function() {
         requestChangeInTransform("in");
     });
 
-    $("#zoomOut").click(function() {
+    document.getElementById("zoomOut").addEventListener("click", function() {
         requestChangeInTransform("out");
     });
 
-    $("#resetTransform").click(function() {
+    document.getElementById("resetTransform").addEventListener("click", function() {
         requestChangeInTransform("reset");
     });
 }
@@ -220,7 +220,7 @@ function applyTransform() {
 
     const svgString = new XMLSerializer().serializeToString(clonedSvg);
     const svgDataURL = `data:image/svg+xml;base64,${btoa(svgString)}`;
-    $("#sourceSvg")[0].src = svgDataURL;
+    document.getElementById("sourceSvg").src = svgDataURL;
 
     transformedSvg = clonedSvg;
 }
@@ -260,7 +260,7 @@ function updateTransformText() {
     function normalizeNumber(num) {
         return +num.toFixed(2);
     }
-    $("#transformText").text(`(${normalizeNumber(affineTransform[4] * 100)}, ${normalizeNumber(affineTransform[5] * 100)}) ${normalizeNumber(affineTransform[0])}x`);
+    document.getElementById("transformText").textContent = `(${normalizeNumber(affineTransform[4] * 100)}, ${normalizeNumber(affineTransform[5] * 100)}) ${normalizeNumber(affineTransform[0])}x`;
 }
 
 export async function getCurrentSvgImageData() {
@@ -305,17 +305,24 @@ export function getSvgJson(svgString) {
 }
 
 export function convertJsonToDataURL(json, width, height) {
-    $("#previewCanvas").remove();
-    $(document.body).append(`<canvas id="previewCanvas" width="${width}" height="${height}" style="display: none;"></canvas>`);
+    const existing = document.getElementById("previewCanvas");
+    if (existing) existing.remove();
 
-    paper.setup($("#previewCanvas")[0]);
+    const canvas = document.createElement("canvas");
+    canvas.id = "previewCanvas";
+    canvas.width = width;
+    canvas.height = height;
+    canvas.style.display = "none";
+    document.body.appendChild(canvas);
+
+    paper.setup(canvas);
     paper.project.importJSON(json);
     paper.view.draw();
 
-    const dataURL = $("#previewCanvas")[0].toDataURL();
+    const dataURL = canvas.toDataURL();
 
     paper.project.remove();
-    $("#previewCanvas").remove();
+    canvas.remove();
 
     return dataURL;
 }

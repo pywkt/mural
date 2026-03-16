@@ -1,3 +1,5 @@
+import { httpPost } from './utils.js';
+
 export async function leftRetractDown() {
     await postCommand("l-ret");
 }
@@ -31,8 +33,10 @@ export async function rightExtendUp() {
 }
 
 async function postCommand(command) {
-    $.post("/command", {command}).fail(function() {
+    try {
+        await httpPost("/command", { command });
+    } catch {
         alert("Command failed");
         location.reload();
-    });
+    }
 }

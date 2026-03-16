@@ -5,157 +5,98 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mural</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet"
-    integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
-  <link rel="stylesheet/less" type="text/css" href="dpad.less" />
+  <link href="dpad.css" rel="stylesheet">
   <link href="main.css" rel="stylesheet">
-  <style>
-    .bd-placeholder-img {
-      font-size: 1.125rem;
-      text-anchor: middle;
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      user-select: none;
-    }
-
-    @media (min-width: 768px) {
-      .bd-placeholder-img-lg {
-        font-size: 3.5rem;
-      }
-    }
-
-    .b-example-divider {
-      height: 3rem;
-      background-color: rgba(0, 0, 0, .1);
-      border: solid rgba(0, 0, 0, .15);
-      border-width: 1px 0;
-      box-shadow: inset 0 .5em 1.5em rgba(0, 0, 0, .1), inset 0 .125em .5em rgba(0, 0, 0, .15);
-    }
-
-    .b-example-vr {
-      flex-shrink: 0;
-      width: 1.5rem;
-      height: 100vh;
-    }
-
-    .bi {
-      vertical-align: -.125em;
-      fill: currentColor;
-    }
-
-    .nav-scroller {
-      position: relative;
-      z-index: 2;
-      height: 2.75rem;
-      overflow-y: hidden;
-    }
-
-    .nav-scroller .nav {
-      display: flex;
-      flex-wrap: nowrap;
-      padding-bottom: 1rem;
-      margin-top: -1px;
-      overflow-x: auto;
-      text-align: center;
-      white-space: nowrap;
-      -webkit-overflow-scrolling: touch;
-    }
-  </style>
 </head>
 
-<body class="text-center">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa"
-    crossorigin="anonymous"></script>
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-throttle-debounce/1.1/jquery.ba-throttle-debounce.min.js" crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/less" ></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.17/paper-full.min.js" integrity="sha512-NApOOz1j2Dz1PKsIvg1hrXLzDFd62+J0qOPIhm8wueAnk4fQdSclq6XvfzvejDs6zibSoDC+ipl1dC66m+EoSQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<body>
+  <script src="lib/paper-full.min.js"></script>
   <script src="main.js" type="module"></script>
-  <main class="form-signin w-100 m-auto">
+  <div class="app-container">
       <div id="loadingSlide" class="muralSlide" style="display:none;">
-        <div class="spinner-border mb-5 loading" role="status"></div>
+        <div class="spinner mb-5"></div>
       </div>
       <div id="retractBeltsSlide" class="muralSlide" style="display:none;">
-        <h3 class="mb-2 fw-normal">Retract belts</h3>
+        <h3>Retract belts</h3>
         <h6 class="mb-5"><small class="text-muted">Place the belt loops on the homing screws and retract the belts until the motors stall. Don't let the motors stall for too long.</small></h6>
-        <div class="form-check form-switch mb-5">
-          <input class="form-check-input" style="transform: scale(2);" type="checkbox" role="switch" id="leftMotorToggle">
-          <label class="form-check-label" for="leftMotorToggle">Left motor</label>
+        <div class="toggle-switch mb-5">
+          <input type="checkbox" id="leftMotorToggle">
+          <label for="leftMotorToggle">Left motor</label>
         </div>
-        <div class="form-check form-switch mb-5">
-          <input class="form-check-input" style="transform: scale(2);" type="checkbox" role="switch" id="rightMotorToggle">
-          <label class="form-check-label" for="rightMotorToggle">Right motor</label>
+        <div class="toggle-switch mb-5">
+          <input type="checkbox" id="rightMotorToggle">
+          <label for="rightMotorToggle">Right motor</label>
         </div>
-        <button class="w-100 btn btn-lg btn-primary mb-2" id="beltsRetracted">Belts are retracted</button>
-        <button class="w-100 btn btn-lg btn-secondary mb-5 phaseBack" data-phase="SvgSelect">Back</button>
+        <button class="btn btn-lg btn-primary mb-2" id="beltsRetracted">Belts are retracted</button>
+        <button class="btn btn-lg btn-secondary mb-5 phaseBack" data-phase="SvgSelect">Back</button>
       </div>
       <div id="distanceBetweenAnchorsSlide" class="muralSlide" style="display:none;">
-        <h3 class="mb-2 fw-normal">Distance between hangers</h3>
+        <h3>Distance between hangers</h3>
         <h6 class="mb-5"><small class="text-muted">Distance between the two nails on which you are hanging Mural, in millimeters</small></h6>
-        <input type="number" class="form-control mb-3" id="distanceInput">
+        <input type="number" class="mb-3" id="distanceInput">
         <h6 class="mb-3"><small class="text-muted" id="drawingAreaInfo"></small></h6>
-        <button class="w-100 btn btn-lg btn-primary mb-3" id="setDistance">Set distance</button>
+        <button class="btn btn-lg btn-primary mb-3" id="setDistance">Set distance</button>
         <div id="quickStartSection" style="display:none;">
           <hr>
-          <button class="w-100 btn btn-lg btn-warning mb-2" id="quickStart">Quick Start</button>
-          <div class="alert alert-warning mb-3" role="alert">
+          <button class="btn btn-lg btn-warning mb-2" id="quickStart">Quick Start</button>
+          <div class="alert alert-warning mb-3">
             <strong>Warning:</strong> Only use Quick Start if a previous drawing has completed successfully and the plotter is still hanging at the home position. Using this when the plotter has been moved or removed will cause incorrect positioning.
           </div>
         </div>
-        <div style="position:fixed; top: 10px; right: 10px;" data-bs-toggle="modal" data-bs-target="#toolsModal"><i class="bi-gear fs-2"></i></div>
+        <button class="tools-btn" id="openToolsModal" type="button">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/></svg>
+        </button>
       </div>
       <div id="extendToHomeSlide" class="muralSlide" style="display:none;">
-        <h3 class="mb-2 fw-normal">Extend belts</h3>
+        <h3>Extend belts</h3>
         <h6 class="mb-5"><small class="text-muted">The belts will extend to their home position. Make sure the belts are unobstructed and the motors do not skip, or the drawing accuracy may be affected</small></h6>
-        <button class="w-100 btn btn-lg btn-primary mb-2" id="extendToHome">Extend to home position</button>
-        <div class="spinner-border mb-5 loading" id="extendingSpinner" role="status" style="visibility:hidden;"></div>
-        <button class="w-100 btn btn-lg btn-secondary mb-5 phaseBack" data-phase="RetractBelts">Back</button>
+        <button class="btn btn-lg btn-primary mb-2" id="extendToHome">Extend to home position</button>
+        <div class="spinner mb-5 loading" id="extendingSpinner" style="visibility:hidden;"></div>
+        <button class="btn btn-lg btn-secondary mb-5 phaseBack" data-phase="RetractBelts">Back</button>
       </div>
       <div id="penCalibrationSlide" class="muralSlide" style="display:none;">
-        <h3 class="mb-2 fw-normal">Pen calibration</h3>
+        <h3>Pen calibration</h3>
         <h6 class="mb-5"><small class="text-muted">Insert the pen so it's close to, but not touching the wall and secure it with a bolt. Then, adjust the pen position so the pen is touching the wall</small></h6>
-        <input type="range" class="form-range mb-5 text-center" min="0" max="90" id="servoRange" value="0">
-        <div class="btn-group mb-3 btn-group-lg" role="group">
-          <div class="btn-group me-3" role="group">
-            <button type="button" class="btn btn-primary fs-4" id="penMinus">-</button>
-          </div>
-          <div class="btn-group me-3" role="group">
-            <button type="button" class="btn btn-primary fs-4" id="penPlus">+</button>
-          </div>
+        <input type="range" class="mb-5" min="0" max="90" id="servoRange" value="0">
+        <div class="btn-group mb-3">
+          <button type="button" class="btn btn-primary btn-sm" id="penMinus">&minus;</button>
+          <button type="button" class="btn btn-primary btn-sm" id="penPlus">+</button>
         </div>
-        <button class="w-100 btn btn-lg btn-primary mb-2" id="setPenDistance">Pen is touching the wall</button>
-        <button class="w-100 btn btn-lg btn-secondary mb-5 phaseBack" data-phase="ExtendToHome">Back</button>
+        <button class="btn btn-lg btn-primary mb-2" id="setPenDistance">Pen is touching the wall</button>
+        <button class="btn btn-lg btn-secondary mb-5 phaseBack" data-phase="ExtendToHome">Back</button>
       </div>
       <div id="svgUploadSlide" class="muralSlide" style="display:none;">
-        <h3 class="mb-2 fw-normal">Select SVG Image</h3>
+        <h3>Select SVG Image</h3>
         <h6 class="mb-2"><small class="text-muted">Use black and white line art SVGs for now</small></h6>
-        <img id="sourceSvg" class="img-thumbnail mb-2 svg-control" style="display:none;width:100%;">
-        <div class="container svg-control mb-2" style="display: none;">
-          <div class="row">
-            <div class="col-10 align-self-center">
+        <img id="sourceSvg" class="img-thumbnail mb-2 svg-control" style="display:none;">
+        <div class="svg-control mb-2" style="display: none;">
+          <div class="svg-controls-row">
+            <div class="dpad-col">
               <div class="set blue">
                 <nav class="d-pad">
                   <a class="up" href="#"></a>
                   <a class="right" href="#"></a>
                   <a class="down" href="#"></a>
-                  <a class="left" href="#"></a>  
+                  <a class="left" href="#"></a>
                 </nav>
               </div>
             </div>
-            <div class="col-2 align-self-center">
-              <button type="button" class="btn btn-primary mb-2" id="zoomIn"><i class="bi-zoom-in fs-2"></i></button>
-              <button type="button" class="btn btn-primary mb-2" id="zoomOut"><i class="bi-zoom-out fs-2"></i></button>
-              <button type="button" class="btn btn-primary" id="resetTransform"><i class="bi-arrow-counterclockwise fs-2"></i></button>
+            <div class="zoom-col">
+              <button type="button" class="btn btn-primary btn-icon" id="zoomIn">
+                <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor"><path d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/><path d="M10.344 11.742c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1 6.538 6.538 0 0 1-1.398 1.4z"/><path d="M6.5 3a.5.5 0 0 1 .5.5V6h2.5a.5.5 0 0 1 0 1H7v2.5a.5.5 0 0 1-1 0V7H3.5a.5.5 0 0 1 0-1H6V3.5a.5.5 0 0 1 .5-.5z"/></svg>
+              </button>
+              <button type="button" class="btn btn-primary btn-icon" id="zoomOut">
+                <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor"><path d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/><path d="M10.344 11.742c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1 6.538 6.538 0 0 1-1.398 1.4z"/><path d="M3.5 6a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1h-6z"/></svg>
+              </button>
+              <button type="button" class="btn btn-primary btn-icon" id="resetTransform">
+                <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z"/></svg>
+              </button>
             </div>
           </div>
-          <div class="row">
-            <h6><small class="text-muted" id="transformText"></small></h6>
-          </div>
+          <h6><small class="text-muted" id="transformText"></small></h6>
         </div>
-        <label for="paperSize" class="form-label mb-0">Paper Size</label>
-        <select class="form-select mb-2" id="paperSize">
+        <label for="paperSize">Paper Size</label>
+        <select class="mb-2" id="paperSize">
           <option value="full" selected>Full drawing area</option>
           <option value="letter-p">Letter - Portrait (216 &times; 279mm)</option>
           <option value="letter-l">Letter - Landscape (279 &times; 216mm)</option>
@@ -165,53 +106,51 @@
           <option value="a3-l">A3 - Landscape (420 &times; 297mm)</option>
           <option value="custom">Custom</option>
         </select>
-        <div id="customPaperInputs" style="display:none;" class="mb-2">
-          <div class="row g-2">
-            <div class="col">
-              <input type="number" class="form-control" id="customPaperWidth" placeholder="Width (mm)">
-            </div>
-            <div class="col">
-              <input type="number" class="form-control" id="customPaperHeight" placeholder="Height (mm)">
-            </div>
+        <div id="customPaperInputs" style="display:none;" class="row mb-2">
+          <div class="col">
+            <input type="number" id="customPaperWidth" placeholder="Width (mm)">
+          </div>
+          <div class="col">
+            <input type="number" id="customPaperHeight" placeholder="Height (mm)">
           </div>
         </div>
-        <div class="row g-2 mb-2">
+        <div class="row mb-2">
           <div class="col">
-            <label for="marginX" class="form-label mb-0">Margin X (mm)</label>
-            <input type="number" class="form-control" id="marginX" value="0" min="0">
+            <label for="marginX">Margin X (mm)</label>
+            <input type="number" id="marginX" value="0" min="0">
           </div>
           <div class="col">
-            <label for="marginY" class="form-label mb-0">Margin Y (mm)</label>
-            <input type="number" class="form-control" id="marginY" value="0" min="0">
+            <label for="marginY">Margin Y (mm)</label>
+            <input type="number" id="marginY" value="0" min="0">
           </div>
         </div>
         <h6 class="mb-2"><small class="text-muted" id="paperSizeInfo"></small></h6>
-        <input class="form-control form-control-lg mb-2" id="uploadSvg" type="file" accept=".svg">
-        <button class="w-100 btn btn-lg btn-primary mb-2" id="preview" disabled>Preview drawing</button>
+        <input type="file" class="mb-2" id="uploadSvg" accept=".svg">
+        <button class="btn btn-lg btn-primary mb-2" id="preview" disabled>Preview drawing</button>
         <hr>
         <h6 class="mb-2"><small class="text-muted">Or upload a pre-generated command file</small></h6>
-        <input class="form-control form-control-lg mb-2" id="uploadRawCommands" type="file" accept=".txt,.mural">
-        <div class="form-check mb-2">
-          <input class="form-check-input" type="checkbox" id="centerRawCommands" checked>
-          <label class="form-check-label" for="centerRawCommands">Center drawing on paper</label>
+        <input type="file" class="mb-2" id="uploadRawCommands" accept=".txt,.mural">
+        <div class="checkbox-row mb-2">
+          <input type="checkbox" id="centerRawCommands" checked>
+          <label for="centerRawCommands">Center drawing on paper</label>
         </div>
-        <button class="w-100 btn btn-lg btn-secondary mb-5 phaseBack" data-phase="SetTopDistance">Back</button>
+        <button class="btn btn-lg btn-secondary mb-5 phaseBack" data-phase="SetTopDistance">Back</button>
       </div>
       <div id="chooseRendererSlide" class="muralSlide" style="display:none;">
-        <h3 class="mb-2 fw-normal">Choose render type</h3>
-        <button class="w-100 btn btn-lg btn-primary mb-5 mt-5" id="pathTracing">Path Tracing<br/><sub>Works well for most drawings</sub></button>
-        <button class="w-100 btn btn-lg btn-primary mb-5" id="vectorRasterVector">Vector → Raster → Vector<br/><sub>Preserves stroke width</sub></button>
-        <button class="w-100 btn btn-lg btn-secondary mt-3 backToSvgSelect">Back</button>
+        <h3>Choose render type</h3>
+        <button class="btn btn-lg btn-primary mb-5 mt-5" id="pathTracing">Path Tracing<br/><sub>Works well for most drawings</sub></button>
+        <button class="btn btn-lg btn-primary mb-5" id="vectorRasterVector">Vector &rarr; Raster &rarr; Vector<br/><sub>Preserves stroke width</sub></button>
+        <button class="btn btn-lg btn-secondary mt-3 backToSvgSelect">Back</button>
       </div>
       <div id="drawingPreviewSlide" class="muralSlide" style="display:none;">
-        <h3 class="mb-2 fw-normal">Drawing preview</h3>
+        <h3>Drawing preview</h3>
         <img id="previewSvg" class="img-thumbnail mb-2 svg-preview" style="display:none;">
-        <div class="progress mb-2" style="height: 20px;">
-          <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" id="progressBar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+        <div class="progress mb-2">
+          <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar" style="width: 100%;"></div>
         </div>
-        <h6 class="mb-2 fw-normal svg-preview" style="display: none;" id="distances"></h6>
-        <label for="infillPattern" class="form-label mb-0">Infill Pattern</label>
-        <select class="form-select mb-2" id="infillPattern">
+        <h6 class="mb-2 svg-preview" style="display: none;" id="distances"></h6>
+        <label for="infillPattern">Infill Pattern</label>
+        <select class="mb-2" id="infillPattern">
           <option value="none" selected>None</option>
           <option value="horizontal">Horizontal</option>
           <option value="vertical">Vertical</option>
@@ -220,83 +159,81 @@
           <option value="crosshatch">Crosshatch</option>
           <option value="concentric">Concentric</option>
         </select>
-        <label for="infillSpacing" class="form-label mb-0 infillSpacingControl" style="display:none;">Spacing (<span id="infillSpacingValue">10</span>mm)</label>
-        <input type="range" class="form-range mb-2 text-center infillSpacingControl" style="display:none;" min="2" max="30" step="1" id="infillSpacing" value="10">
-        <label for="turdSize" class="form-label mb-0">Despeckle</label>
-        <input type="range" class="form-range mb-2 text-center" min="2" max="200" step="11" id="turdSize" value="2">
-        <input class="form-check-input mb-2" type="checkbox" id="flattenPathsCheckbox">
-        <label class="form-check-label" for="flattenPathsCheckbox">Flatten paths</label>
-        <button class="w-100 btn btn-lg btn-primary mb-2" id="acceptSvg" disabled>Accept</button>
-        <button class="w-100 btn btn-lg btn-secondary mb-5 backToSvgSelect">Back</button>
-      </div>
-      <div id="uploadProgress" class="muralSlide" style="display:none;">
-        <h3 class="mb-2 fw-normal">Uploading...</h3>
-        <div class="progress mb-2" id="uploadProgress" role="progressbar" aria-label="Upload progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-          <div class="progress-bar" style="width: 0%"></div>
+        <label for="infillSpacing" class="infillSpacingControl" style="display:none;">Spacing (<span id="infillSpacingValue">10</span>mm)</label>
+        <input type="range" class="mb-2 infillSpacingControl" style="display:none;" min="2" max="30" step="1" id="infillSpacing" value="10">
+        <label for="turdSize" id="turdSizeLabel">Despeckle</label>
+        <input type="range" class="mb-2" min="2" max="200" step="11" id="turdSize" value="2">
+        <div class="checkbox-row mb-2">
+          <input type="checkbox" id="flattenPathsCheckbox">
+          <label for="flattenPathsCheckbox" id="flattenPathsLabel">Flatten paths</label>
         </div>
-        <div class="progress mb-2" id="verificationProgress" role="progressbar" aria-label="Verification progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
-          <div class="progress-bar bg-success" style="width: 0%"></div>
+        <button class="btn btn-lg btn-primary mb-2" id="acceptSvg" disabled>Accept</button>
+        <button class="btn btn-lg btn-secondary mb-5 backToSvgSelect">Back</button>
+      </div>
+      <div id="uploadProgressSlide" class="muralSlide" style="display:none;">
+        <h3 class="mb-2">Uploading...</h3>
+        <div class="progress mb-2">
+          <div class="progress-bar" id="uploadProgressBar" style="width: 0%"></div>
+        </div>
+        <div class="progress mb-2">
+          <div class="progress-bar bg-success" id="verificationBar" style="width: 0%"></div>
         </div>
       </div>
       <div id="beginDrawingSlide" class="muralSlide" style="display: none;">
-        <h3 class="mb-5 fw-normal">Mural is ready!</h3>
-        <button class="w-100 btn btn-lg btn-primary mb-2" id="beginDrawing">Begin Drawing</button>
-        <button class="w-100 btn btn-lg btn-secondary mb-2 phaseBack" data-phase="PenCalibration">Back</button>
-        <button class="w-100 btn btn-lg btn-secondary mb-5" id="reset">Reset</button>
+        <h3 class="mb-5">Mural is ready!</h3>
+        <button class="btn btn-lg btn-primary mb-2" id="beginDrawing">Begin Drawing</button>
+        <button class="btn btn-lg btn-secondary mb-2 phaseBack" data-phase="PenCalibration">Back</button>
+        <button class="btn btn-lg btn-secondary mb-5" id="reset">Reset</button>
       </div>
       <div id="drawingBegan" class="muralSlide" style="display: none;">
-        <h3 class="mb-2 fw-normal" id="drawingStatusTitle">Drawing Started</h3>
+        <h3 class="mb-2" id="drawingStatusTitle">Drawing Started</h3>
         <h6 class="mb-5"><small class="text-muted" id="drawingStatusText">Drawing in progress...</small></h6>
-        <button class="w-100 btn btn-lg btn-primary mb-2" id="newDrawing" style="display:none;" onclick="location.reload()">Start New Drawing</button>
+        <button class="btn btn-lg btn-primary mb-2" id="newDrawing" style="display:none;" onclick="location.reload()">Start New Drawing</button>
       </div>
-      <div class="mt-5"><a href="https://github.com/nikivanov/mural" class="link-primary">Mural</a></div>
-  </main>
-  <div class="modal fade" id="toolsModal" tabindex="-1" role="dialog" aria-labelledby="toolsModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="toolsModalLabel">Tools</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="app-footer"><a href="https://github.com/nikivanov/mural">Mural</a></div>
+  </div>
+
+  <div class="modal" id="toolsModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Tools</h5>
+        <button type="button" class="btn-close" id="closeToolsModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label for="leftMotorTool">Left Motor</label>
+        <input type="range" class="mb-5" min="-1" max="1" id="leftMotorTool" value="0">
+        <label for="rightMotorTool">Right Motor</label>
+        <input type="range" class="mb-5" min="-1" max="1" id="rightMotorTool" value="0">
+        <label for="servoRangeTool">Servo</label>
+        <input type="range" class="mb-2" min="0" max="90" id="servoRangeTool" value="0">
+        <div class="btn-group mb-3">
+          <button type="button" class="btn btn-primary btn-sm" id="servoMinusTool">&minus;</button>
+          <button type="button" class="btn btn-primary btn-sm" id="servoPlusTool">+</button>
         </div>
-        <div class="modal-body">
-          <label for="leftMotorTool" class="form-label">Left Motor</label>
-          <input type="range" class="form-range mb-5 text-center" min="-1" max="1" id="leftMotorTool" value="0">
-          <label for="rightMotorTool" class="form-label">Right Motor</label>
-          <input type="range" class="form-range mb-5 text-center" min="-1" max="1" id="rightMotorTool" value="0">
-          <label for="servoRangeTool" class="form-label">Servo</label>
-          <input type="range" class="form-range mb-2 text-center" min="0" max="90" id="servoRangeTool" value="0">
-          <div class="btn-group mb-3 btn-group-lg" role="group">
-            <div class="btn-group me-3" role="group">
-              <button type="button" class="btn btn-primary fs-4" id="servoMinusTool">-</button>
-            </div>
-            <div class="btn-group me-3" role="group">
-              <button type="button" class="btn btn-primary fs-4" id="servoPlusTool">+</button>
-            </div>
-          </div>
-          <button class="w-100 btn btn-lg btn-primary mb-5" id="parkServoTool">Park Servo</button>
-          <button class="w-100 btn btn-lg btn-primary mb-5" id="estepsTool">Extend 1000mm (E-steps calibration)</button>
-          <div class="form-check form-switch mb-3">
-            <input class="form-check-input" type="checkbox" role="switch" id="invertLeftMotor">
-            <label class="form-check-label" for="invertLeftMotor">Invert Left Motor</label>
-          </div>
-          <div class="form-check form-switch mb-3">
-            <input class="form-check-input" type="checkbox" role="switch" id="invertRightMotor">
-            <label class="form-check-label" for="invertRightMotor">Invert Right Motor</label>
-          </div>
-          <div class="form-check form-switch mb-3">
-            <input class="form-check-input" type="checkbox" role="switch" id="invertServo">
-            <label class="form-check-label" for="invertServo">Invert Servo</label>
-          </div>
-          <label for="penLiftAmount" class="form-label">Pen Lift (<span id="penLiftValue">20</span>&deg;)</label>
-          <input type="range" class="form-range mb-5 text-center" min="5" max="90" step="5" id="penLiftAmount" value="20">
+        <button class="btn btn-lg btn-primary mb-5" id="parkServoTool">Park Servo</button>
+        <button class="btn btn-lg btn-primary mb-5" id="estepsTool">Extend 1000mm (E-steps calibration)</button>
+        <div class="toggle-switch mb-3">
+          <input type="checkbox" id="invertLeftMotor">
+          <label for="invertLeftMotor">Invert Left Motor</label>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+        <div class="toggle-switch mb-3">
+          <input type="checkbox" id="invertRightMotor">
+          <label for="invertRightMotor">Invert Right Motor</label>
         </div>
+        <div class="toggle-switch mb-3">
+          <input type="checkbox" id="invertServo">
+          <label for="invertServo">Invert Servo</label>
+        </div>
+        <label for="penLiftAmount">Pen Lift (<span id="penLiftValue">20</span>&deg;)</label>
+        <input type="range" class="mb-5" min="5" max="90" step="5" id="penLiftAmount" value="20">
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="closeToolsModalFooter" onclick="document.getElementById('closeToolsModal').click()">Close</button>
       </div>
     </div>
   </div>
-  
+  <div class="modal-backdrop" id="toolsModalBackdrop"></div>
+
 </body>
 
 </html>

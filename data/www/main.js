@@ -1,15 +1,17 @@
 import * as svgControl from './svgControl.js';
 import * as client from './client.js';
+import { httpGet, httpPost, httpUpload, httpDownload, throttle, show, hide, hideAll } from './utils.js';
 
 let currentState = null;
-
 let currentWorker = null;
+let uploadConvertedCommands = null;
+
+const el = (id) => document.getElementById(id);
+const trigger = (element, eventName) => element.dispatchEvent(new Event(eventName, { bubbles: true }));
 
 window.onload = function () {
     init();
 };
-
-let uploadConvertedCommands = null;
 
 async function checkIfExtendedToHome(extendToHomeTime) {
     await new Promise(r => setTimeout(r, extendToHomeTime * 1000));
@@ -18,7 +20,7 @@ async function checkIfExtendedToHome(extendToHomeTime) {
     let done = false;
     while (!done) {
         try {
-            const state = await $.get("/getState");
+            const state = await httpGet("/getState");
             if (state.phase !== 'ExtendToHome') {
                 adaptToState(state);
                 done = true;
@@ -33,9 +35,9 @@ async function checkIfExtendedToHome(extendToHomeTime) {
 }
 
 function init() {
-    function doneWithPhase(custom) {
-        $(".muralSlide").hide();
-        $("#loadingSlide").show();
+    async function doneWithPhase(custom) {
+        hideAll(".muralSlide");
+        show("loadingSlide");
         if (!custom) {
             custom = {
                 url: "/doneWithPhase",
@@ -44,32 +46,33 @@ function init() {
             };
         }
 
-        $.post(custom.url, custom.data || {}, function(state) {
+        try {
+            const state = await httpPost(custom.url, custom.data || {});
             adaptToState(state);
-        }).fail(function() {
+        } catch {
             alert(`${custom.commandName} command failed`);
             location.reload();
-        });
+        }
     }
 
-    $("#beltsRetracted").click(async function() { 
+    el("beltsRetracted").addEventListener("click", async function() {
         await client.leftRetractUp();
         await client.rightRetractUp();
         doneWithPhase();
     });
 
-    $("#distanceInput").on('input', function() {
-        const val = parseInt($(this).val());
+    el("distanceInput").addEventListener("input", function() {
+        const val = parseInt(this.value);
         if (!isNaN(val) && val > 0) {
             const drawWidth = Math.round(val * 0.6);
-            $("#drawingAreaInfo").text(`Drawing area: ${drawWidth}mm wide`);
+            el("drawingAreaInfo").textContent = `Drawing area: ${drawWidth}mm wide`;
         } else {
-            $("#drawingAreaInfo").text('');
+            el("drawingAreaInfo").textContent = '';
         }
     });
 
-    $("#setDistance").click(function() {
-        const inputValue = parseInt($("#distanceInput").val());
+    el("setDistance").addEventListener("click", function() {
+        const inputValue = parseInt(el("distanceInput").value);
         if (isNaN(inputValue)) {
             throw new Error("input value is not a number");
         }
@@ -81,7 +84,7 @@ function init() {
         });
     });
 
-    $("#quickStart").click(function() {
+    el("quickStart").addEventListener("click", function() {
         const savedDistance = currentState.savedTopDistance;
         if (!savedDistance || savedDistance <= 0) {
             return;
@@ -93,64 +96,55 @@ function init() {
         });
     });
 
-    $("#leftMotorToggle").change(function() {
+    el("leftMotorToggle").addEventListener("change", function() {
         if (this.checked) {
-            client.leftRetractDown(); 
+            client.leftRetractDown();
         } else {
             client.leftRetractUp();
         }
     });
 
-    $("#rightMotorToggle").change(function() {
+    el("rightMotorToggle").addEventListener("change", function() {
         if (this.checked) {
-            client.rightRetractDown(); 
+            client.rightRetractDown();
         } else {
             client.rightRetractUp();
         }
     });
 
-    $("#extendToHome").click(function() {
-        $(this).prop( "disabled", true);
-        $("#extendingSpinner").css('visibility', 'visible');
-        $.post("/extendToHome", {})
-        .always(async function(res) {
+    el("extendToHome").addEventListener("click", async function() {
+        this.disabled = true;
+        el("extendingSpinner").style.visibility = 'visible';
+        try {
+            const res = await httpPost("/extendToHome");
             const extendToHomeTime = parseInt(res);
             await checkIfExtendedToHome(extendToHomeTime);
-        });
+        } catch {}
     });
-    
-    function getServoValueFromInputValue() {
-        const inputValue = parseInt($("#servoRange").val());
-        const value = 90 - inputValue;
-        let normalizedValue;
-        if (value < 0) {
-            normalizedValue = 0;
-        } else if (value > 90) {
-            normalizedValue = 90;
-        } else {
-            normalizedValue = value;
-        }
 
-        return normalizedValue;
+    function getServoValueFromInputValue() {
+        const inputValue = parseInt(el("servoRange").value);
+        const value = 90 - inputValue;
+        return Math.max(0, Math.min(90, value));
     }
 
-    $("#servoRange").on('input', $.throttle(250, function (e) {
+    el("servoRange").addEventListener("input", throttle(250, function () {
         const servoValue = getServoValueFromInputValue();
-        $.post("/setServo", {angle: servoValue});
+        httpPost("/setServo", {angle: servoValue});
     }));
 
-    const stepVaule = 5;
-    $("#penMinus").click(function() {
-        $("#servoRange")[0].stepDown(stepVaule);
-        $("#servoRange").trigger('input');
+    const stepValue = 5;
+    el("penMinus").addEventListener("click", function() {
+        el("servoRange").stepDown(stepValue);
+        trigger(el("servoRange"), 'input');
     });
 
-    $("#penPlus").click(function() {
-        $("#servoRange")[0].stepUp(stepVaule);
-        $("#servoRange").trigger('input');
+    el("penPlus").addEventListener("click", function() {
+        el("servoRange").stepUp(stepValue);
+        trigger(el("servoRange"), 'input');
     });
 
-    $("#setPenDistance").click(function () {
+    el("setPenDistance").addEventListener("click", function () {
         const inputValue = getServoValueFromInputValue();
         doneWithPhase({
             url: "/setPenDistance",
@@ -176,17 +170,17 @@ function init() {
         const w = Math.round(svgControl.getTargetWidth());
         const h = Math.round(svgControl.getTargetHeight());
         if (xOff > 0 || yOff > 0) {
-            $("#paperSizeInfo").text(`Drawing: ${w} \u00d7 ${h}mm, centered on home position`);
+            el("paperSizeInfo").textContent = `Drawing: ${w} \u00d7 ${h}mm, centered on home position`;
         } else {
-            $("#paperSizeInfo").text(`Drawing: ${w} \u00d7 ${h}mm`);
+            el("paperSizeInfo").textContent = `Drawing: ${w} \u00d7 ${h}mm`;
         }
     }
 
     function applyPaperSize() {
-        const val = $("#paperSize").val();
+        const val = el("paperSize").value;
         if (val === 'custom') {
-            const w = parseFloat($("#customPaperWidth").val());
-            const h = parseFloat($("#customPaperHeight").val());
+            const w = parseFloat(el("customPaperWidth").value);
+            const h = parseFloat(el("customPaperHeight").value);
             svgControl.setPaperSize(w, h);
         } else {
             const size = paperSizes[val];
@@ -196,12 +190,11 @@ function init() {
                 svgControl.setPaperSize(null, null);
             }
         }
-        // Re-apply SVG if one is loaded
         reloadSvgIfLoaded();
     }
 
     function reloadSvgIfLoaded() {
-        const files = $("#uploadSvg")[0].files;
+        const files = el("uploadSvg").files;
         if (files && files.length > 0) {
             files[0].text().then(function(svgString) {
                 svgControl.setSvgString(svgString, currentState);
@@ -215,16 +208,14 @@ function init() {
         const safeWidth = state.safeWidth;
         const homeY = state.homeY;
 
-        // Determine paper constraint from dropdown
-        const paperVal = $("#paperSize").val();
+        const paperVal = el("paperSize").value;
         let paperSize = paperSizes[paperVal];
         if (paperVal === 'custom') {
-            const w = parseFloat($("#customPaperWidth").val());
-            const h = parseFloat($("#customPaperHeight").val());
+            const w = parseFloat(el("customPaperWidth").value);
+            const h = parseFloat(el("customPaperHeight").value);
             if (w > 0 && h > 0) paperSize = {width: w, height: h};
         }
 
-        // Find bounding box of coordinate lines
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
         for (const line of lines) {
             if (/^[\d.-]/.test(line)) {
@@ -242,15 +233,14 @@ function init() {
             }
         }
 
-        if (minX === Infinity) return text; // no coordinates found
+        if (minX === Infinity) return text;
 
         const drawingWidth = maxX - minX;
         const drawingHeight = maxY - minY;
 
-        const mx = parseFloat($("#marginX").val()) || 0;
-        const my = parseFloat($("#marginY").val()) || 0;
+        const mx = parseFloat(el("marginX").value) || 0;
+        const my = parseFloat(el("marginY").value) || 0;
 
-        // Compute centering offsets, accounting for margins
         let maxWidth = safeWidth - 2 * mx;
         if (paperSize) maxWidth = Math.min(paperSize.width - 2 * mx, safeWidth - 2 * mx);
 
@@ -262,7 +252,6 @@ function init() {
             if (yOffset + minY < my) yOffset = -minY + my;
         }
 
-        // Apply offsets to coordinate lines
         return lines.map(function(line) {
             if (/^[\d.-]/.test(line)) {
                 const parts = line.split(' ');
@@ -278,48 +267,53 @@ function init() {
         }).join('\n');
     }
 
-    $("#paperSize").change(function() {
-        if ($(this).val() === 'custom') {
-            $("#customPaperInputs").show();
+    el("paperSize").addEventListener("change", function() {
+        if (this.value === 'custom') {
+            show("customPaperInputs");
         } else {
-            $("#customPaperInputs").hide();
+            hide("customPaperInputs");
             applyPaperSize();
         }
     });
 
-    $("#customPaperWidth, #customPaperHeight").on('change', function() {
-        applyPaperSize();
-    });
+    el("customPaperWidth").addEventListener("change", applyPaperSize);
+    el("customPaperHeight").addEventListener("change", applyPaperSize);
 
-    $("#marginX, #marginY").on('change', function() {
+    el("marginX").addEventListener("change", updateMargin);
+    el("marginY").addEventListener("change", updateMargin);
+    function updateMargin() {
         svgControl.setMargin(
-            parseFloat($("#marginX").val()) || 0,
-            parseFloat($("#marginY").val()) || 0
+            parseFloat(el("marginX").value) || 0,
+            parseFloat(el("marginY").value) || 0
         );
         reloadSvgIfLoaded();
-    });
+    }
 
-    async function getUploadedSvgString() {
-        const [file] = $("#uploadSvg")[0].files;
-        if (file) {
-            return await file.text();
-        } else {
-            return null;
+    function getUploadedSvgString() {
+        const file = el("uploadSvg").files[0];
+        return file ? file.text() : Promise.resolve(null);
+    }
+
+    function updateUploadProgress(evt) {
+        if (evt.lengthComputable) {
+            const pct = parseInt(evt.loaded / evt.total * 100);
+            const bar = el("uploadProgressBar");
+            if (bar) bar.style.width = pct + '%';
         }
     }
 
-    $("#uploadRawCommands").change(async function() {
-        const [file] = this.files;
+    el("uploadRawCommands").addEventListener("change", async function() {
+        const file = this.files[0];
         if (!file) return;
 
         let text = await file.text();
         if (!text.startsWith('d')) {
             alert('Invalid command file: must start with a distance header (d...)');
-            $(this).val('');
+            this.value = '';
             return;
         }
 
-        if ($("#centerRawCommands").is(":checked") && currentState) {
+        if (el("centerRawCommands").checked && currentState) {
             text = centerRawCommands(text, currentState);
         }
 
@@ -329,73 +323,48 @@ function init() {
         const formData = new FormData();
         formData.append("commands", commandsBlob);
 
-        $(".muralSlide").hide();
-        $("#uploadProgress").show();
+        hideAll(".muralSlide");
+        show("uploadProgressSlide");
 
-        $.ajax({
-            url: "/uploadCommands",
-            data: formData,
-            processData: false,
-            contentType: false,
-            type: 'POST',
-            success: function(data) {
-                verifyUpload(data);
-            },
-            error: function(err) {
-                alert('Upload to Mural failed! ' + err);
-                window.location.reload();
-            },
-            xhr: function () {
-                var xhr = new window.XMLHttpRequest();
-                xhr.upload.addEventListener("progress", function (evt) {
-                    if (evt.lengthComputable) {
-                        var percentComplete = evt.loaded / evt.total;
-                        percentComplete = parseInt(percentComplete * 100);
-                        $("#uploadProgress").attr("aria-valuemax", evt.total.toString());
-                        $("#uploadProgress").attr("aria-valuenow", evt.loaded.toString());
-                        $("#uploadProgress > .progress-bar").attr("style", `width: ${percentComplete}%`);
-                    }
-                }, false);
-                return xhr;
-            },
-        });
+        try {
+            const data = await httpUpload("/uploadCommands", formData, updateUploadProgress);
+            verifyUpload(data);
+        } catch (err) {
+            alert('Upload to Mural failed! ' + err);
+            window.location.reload();
+        }
     });
 
-    $("#uploadSvg").change(async function() {
+    el("uploadSvg").addEventListener("change", async function() {
         const svgString = await getUploadedSvgString();
         if (svgString) {
             svgControl.setSvgString(svgString, currentState);
             updatePaperSizeInfo();
 
-            $(".svg-control").show();
-            $("#preview").removeAttr("disabled");
+            document.querySelectorAll(".svg-control").forEach(e => e.style.display = '');
+            el("preview").disabled = false;
         } else {
-            $("#preview").attr("disabled", "disabled");
-            $(".svg-control").hide();
-            $("#infillDensity").val(0);
-            $("#turdSize").val(2);
-            $("#paperSizeInfo").text('');
+            el("preview").disabled = true;
+            document.querySelectorAll(".svg-control").forEach(e => e.style.display = 'none');
+            el("turdSize").value = 2;
+            el("paperSizeInfo").textContent = '';
         }
     });
 
-    
     let currentPreviewId = 0;
     let rendererFn = null;
 
     async function render_VectorRasterVector() {
         if (currentWorker) {
-            console.log("Terminating previous worker");
             currentWorker.terminate();
         }
         currentPreviewId++;
         const thisPreviewId = currentPreviewId;
 
         const svgString = await getUploadedSvgString();
-        if (!svgString) {
-            throw new Error('No SVG string');
-        }
+        if (!svgString) throw new Error('No SVG string');
 
-        $("#progressBar").text("Rasterizing");
+        el("progressBar").textContent = "Rasterizing";
         const raster = await svgControl.getCurrentSvgImageData();
 
         const vectorizeRequest = {
@@ -409,7 +378,7 @@ function init() {
 
             currentWorker.onmessage = (e) => {
                 if (e.data.type === 'status') {
-                    $("#progressBar").text(e.data.payload);
+                    el("progressBar").textContent = e.data.payload;
                 } else if (e.data.type === 'vectorizer') {
                     const vectorizedSvg = e.data.payload.svg;
                     const scale = svgControl.getRenderScale();
@@ -431,22 +400,19 @@ function init() {
 
     async function render_PathTracing() {
         if (currentWorker) {
-            console.log("Terminating previous worker");
             currentWorker.terminate();
         }
         currentPreviewId++;
         const thisPreviewId = currentPreviewId;
 
         const svgString = await getUploadedSvgString();
-        if (!svgString) {
-            throw new Error('No SVG string');
-        }
+        if (!svgString) throw new Error('No SVG string');
 
         if (currentPreviewId == thisPreviewId) {
             currentWorker = new Worker(`./worker/worker.js?v=${Date.now()}`);
             currentWorker.onmessage = (e) => {
                 if (e.data.type === 'status') {
-                    $("#progressBar").text(e.data.payload);
+                    el("progressBar").textContent = e.data.payload;
                 }
                 else if (e.data.type === 'log') {
                     console.log(`Worker: ${e.data.payload}`);
@@ -461,7 +427,7 @@ function init() {
 
     function renderSvgInWorker(worker, svg, svgWidth, svgHeight) {
         const svgJson = svgControl.getSvgJson(svg);
-       
+
         const renderRequest = {
             type: "renderSvg",
             svgJson,
@@ -479,7 +445,7 @@ function init() {
 
         worker.onmessage = (e) => {
             if (e.data.type === 'status') {
-                $("#progressBar").text(e.data.payload);
+                el("progressBar").textContent = e.data.payload;
             } else if (e.data.type === 'renderer') {
                 console.log("Worker finished!");
 
@@ -505,12 +471,12 @@ function init() {
 
                 const totalDistanceM = +(e.data.payload.distance / 1000).toFixed(1);
                 const drawDistanceM = +(e.data.payload.drawDistance / 1000).toFixed(1);
-                
+
                 deactivateProgressBar();
-                $("#previewSvg").attr("src", resultDataUrl);
-                $("#distances").text(`Total: ${totalDistanceM}m / Draw: ${drawDistanceM}m`);
-                $(".svg-preview").show();
-                $("#acceptSvg").removeAttr("disabled");
+                el("previewSvg").src = resultDataUrl;
+                el("distances").textContent = `Total: ${totalDistanceM}m / Draw: ${drawDistanceM}m`;
+                document.querySelectorAll(".svg-preview").forEach(e => e.style.display = '');
+                el("acceptSvg").disabled = false;
             }
         };
 
@@ -518,161 +484,144 @@ function init() {
     }
 
     function activateProgressBar() {
-        const bar = $("#progressBar");
-        bar.addClass("progress-bar-striped");
-        bar.addClass("progress-bar-animated");
-        bar.removeClass("bg-success");
-        bar.text("");
+        const bar = el("progressBar");
+        bar.classList.add("progress-bar-striped", "progress-bar-animated");
+        bar.classList.remove("bg-success");
+        bar.textContent = "";
     }
 
     function deactivateProgressBar() {
-        const bar = $("#progressBar");
-        bar.removeClass("progress-bar-striped");
-        bar.removeClass("progress-bar-animated");
-        bar.addClass("bg-success");
-        bar.text("Success");
+        const bar = el("progressBar");
+        bar.classList.remove("progress-bar-striped", "progress-bar-animated");
+        bar.classList.add("bg-success");
+        bar.textContent = "Success";
     }
 
-
-    $("#infillPattern").on('change', function() {
-        if ($(this).val() === 'none') {
-            $(".infillSpacingControl").hide();
+    el("infillPattern").addEventListener("change", function() {
+        if (this.value === 'none') {
+            document.querySelectorAll(".infillSpacingControl").forEach(e => e.style.display = 'none');
         } else {
-            $(".infillSpacingControl").show();
+            document.querySelectorAll(".infillSpacingControl").forEach(e => e.style.display = '');
         }
     });
 
-    $("#infillSpacing").on('input', function() {
-        $("#infillSpacingValue").text($(this).val());
+    el("infillSpacing").addEventListener("input", function() {
+        el("infillSpacingValue").textContent = this.value;
     });
 
-    $("#infillPattern,#infillSpacing,#turdSize,#flattenPathsCheckbox").on('input change', async function() {
+    ["infillPattern", "infillSpacing", "turdSize", "flattenPathsCheckbox"].forEach(function(id) {
+        el(id).addEventListener("input", rerenderPreview);
+        el(id).addEventListener("change", rerenderPreview);
+    });
+    async function rerenderPreview() {
         if (!rendererFn) return;
         activateProgressBar();
-        $("#acceptSvg").attr("disabled", "disabled");
+        el("acceptSvg").disabled = true;
         await rendererFn();
+    }
+
+    el("preview").addEventListener("click", function() {
+        hide("svgUploadSlide");
+        show("chooseRendererSlide");
     });
 
-    $("#preview").click(async function() {
-        $("#svgUploadSlide").hide();
-        $("#chooseRendererSlide").show();
-    });
+    el("pathTracing").addEventListener("click", async function() {
+        el("turdSizeLabel").style.display = 'none';
+        el("turdSize").style.display = 'none';
+        el("flattenPathsLabel").style.display = '';
+        el("flattenPathsCheckbox").style.display = '';
 
-    $("#pathTracing").click(async function() {
-        $("label[for='turdSize'],#turdSize").hide();
-        $("label[for='flattenPathsCheckbox'],#flattenPathsCheckbox").show();
-
-        $("#chooseRendererSlide").hide();
-        $("#drawingPreviewSlide").show();
+        hide("chooseRendererSlide");
+        show("drawingPreviewSlide");
         rendererFn = render_PathTracing;
         await rendererFn();
     });
 
-    $("#vectorRasterVector").click(async function() {
-        $("#flattenPathsCheckbox").prop("checked", false);
-        $("label[for='turdSize'],#turdSize").show();
-        $("label[for='flattenPathsCheckbox'],#flattenPathsCheckbox").hide();
+    el("vectorRasterVector").addEventListener("click", async function() {
+        el("flattenPathsCheckbox").checked = false;
+        el("turdSizeLabel").style.display = '';
+        el("turdSize").style.display = '';
+        el("flattenPathsLabel").style.display = 'none';
+        el("flattenPathsCheckbox").style.display = 'none';
 
-        $("#chooseRendererSlide").hide();
-        $("#drawingPreviewSlide").show();
+        hide("chooseRendererSlide");
+        show("drawingPreviewSlide");
         rendererFn = render_VectorRasterVector;
         await rendererFn();
     });
 
-    $(".backToSvgSelect").click(function() {
-        uploadConvertedCommands = null;
+    document.querySelectorAll(".backToSvgSelect").forEach(function(btn) {
+        btn.addEventListener("click", function() {
+            uploadConvertedCommands = null;
 
-        $(".loading").show();
-        activateProgressBar();
-        $("#previewSvg").removeAttr("src");
-        $(".svg-preview").hide();
-        $("#acceptSvg").attr("disabled", "disabled");
+            document.querySelectorAll(".loading").forEach(e => e.style.display = '');
+            activateProgressBar();
+            el("previewSvg").removeAttribute("src");
+            document.querySelectorAll(".svg-preview").forEach(e => e.style.display = 'none');
+            el("acceptSvg").disabled = true;
 
-        $("#svgUploadSlide").show();
-        $("#drawingPreviewSlide").hide();
-        $("#chooseRendererSlide").hide();
+            show("svgUploadSlide");
+            hide("drawingPreviewSlide");
+            hide("chooseRendererSlide");
+        });
     });
-    
-    $("#acceptSvg").click(function() {
+
+    el("acceptSvg").addEventListener("click", async function() {
         if (!uploadConvertedCommands) {
             throw new Error('Commands are empty');
         }
-        $("#acceptSvg").attr("disabled", "disabled");
+        el("acceptSvg").disabled = true;
 
         const commandsBlob = new Blob([uploadConvertedCommands], {
             type: "text/plain"
         });
 
-        $(".muralSlide").hide();
-        $("#uploadProgress").show();
+        hideAll(".muralSlide");
+        show("uploadProgressSlide");
 
         const formData = new FormData();
         formData.append("commands", commandsBlob);
 
-        $.ajax({
-            url: "/uploadCommands",
-            data: formData,
-            processData: false,
-            contentType: false,
-            type: 'POST',
-            success: function(data) {
-                verifyUpload(data);
-            },
-            error: function(err) {
-                alert('Upload to Mural failed! ' + err);
-                window.location.reload();
-            },
-            xhr: function () {
-                var xhr = new window.XMLHttpRequest();
-
-                xhr.upload.addEventListener("progress", function (evt) {
-                    if (evt.lengthComputable) {
-                        var percentComplete = evt.loaded / evt.total;
-                        percentComplete = parseInt(percentComplete * 100);
-                        $("#uploadProgress").attr("aria-valuemax", evt.total.toString());
-                        $("#uploadProgress").attr("aria-valuenow", evt.loaded.toString());
-                        $("#uploadProgress > .progress-bar").attr("style", `width: ${percentComplete}%`);
-                    }
-                }, false);
-
-                return xhr;
-            },
-        });
+        try {
+            const data = await httpUpload("/uploadCommands", formData, updateUploadProgress);
+            verifyUpload(data);
+        } catch (err) {
+            alert('Upload to Mural failed! ' + err);
+            window.location.reload();
+        }
     });
 
+    el("beginDrawing").addEventListener("click", function() {
+        hideAll(".muralSlide");
+        show("drawingBegan");
+        httpPost("/run");
 
-
-    $("#beginDrawing").click(function() {
-        $(".muralSlide").hide();
-        $("#drawingBegan").show();
-        $.post("/run", {});
-
-        const pollInterval = setInterval(function() {
-            $.get("/getState")
-                .done(function(state) {
-                    if (state.phase !== "BeginDrawing") {
-                        clearInterval(pollInterval);
-                        $("#drawingStatusTitle").text("Drawing Complete");
-                        $("#drawingStatusText").text("The drawing has finished and the plotter has returned to the home position.");
-                        $("#newDrawing").show();
-                        currentState = state;
-                    }
-                })
-                .fail(function() {
-                    // ESP may be busy or restarting, keep polling
-                });
+        const pollInterval = setInterval(async function() {
+            try {
+                const state = await httpGet("/getState");
+                if (state.phase !== "BeginDrawing") {
+                    clearInterval(pollInterval);
+                    el("drawingStatusTitle").textContent = "Drawing Complete";
+                    el("drawingStatusText").textContent = "The drawing has finished and the plotter has returned to the home position.";
+                    show("newDrawing");
+                    currentState = state;
+                }
+            } catch {
+                // ESP may be busy or restarting, keep polling
+            }
         }, 5000);
     });
 
-    $("#reset").click(function() {
+    el("reset").addEventListener("click", function() {
         doneWithPhase();
         location.reload();
     });
 
-    $("#leftMotorTool").on('input', function() {
-        const leftMotorDir = parseInt($("#leftMotorTool").val());
+    // Tools modal
+    el("leftMotorTool").addEventListener("input", function() {
+        const leftMotorDir = parseInt(this.value);
         if (leftMotorDir <= -1) {
-            client.leftRetractDown(); 
+            client.leftRetractDown();
         } else if (leftMotorDir >= 1) {
             client.leftExtendDown();
         } else {
@@ -680,10 +629,10 @@ function init() {
         }
     });
 
-    $("#rightMotorTool").on('input', function() {
-        const rightMotorDir = parseInt($("#rightMotorTool").val());
+    el("rightMotorTool").addEventListener("input", function() {
+        const rightMotorDir = parseInt(this.value);
         if (rightMotorDir <= -1) {
-            client.rightRetractDown(); 
+            client.rightRetractDown();
         } else if (rightMotorDir >= 1) {
             client.rightExtendDown();
         } else {
@@ -691,193 +640,188 @@ function init() {
         }
     });
 
-    $("#servoRangeTool").on('input', $.throttle(250, function (e) {
-        const angle = 90 - parseInt($(this).val());
-        $.post("/setServo", {angle: Math.max(0, Math.min(90, angle))});
+    el("servoRangeTool").addEventListener("input", throttle(250, function () {
+        const angle = 90 - parseInt(this.value);
+        httpPost("/setServo", {angle: Math.max(0, Math.min(90, angle))});
     }));
 
     const servoToolStep = 5;
-    $("#servoMinusTool").click(function() {
-        $("#servoRangeTool")[0].stepDown(servoToolStep);
-        $("#servoRangeTool").trigger('input');
+    el("servoMinusTool").addEventListener("click", function() {
+        el("servoRangeTool").stepDown(servoToolStep);
+        trigger(el("servoRangeTool"), 'input');
     });
 
-    $("#servoPlusTool").click(function() {
-        $("#servoRangeTool")[0].stepUp(servoToolStep);
-        $("#servoRangeTool").trigger('input');
+    el("servoPlusTool").addEventListener("click", function() {
+        el("servoRangeTool").stepUp(servoToolStep);
+        trigger(el("servoRangeTool"), 'input');
     });
 
-    $("#parkServoTool").click(function() {
-        $("#servoRangeTool").val(0).trigger('input');
+    el("parkServoTool").addEventListener("click", function() {
+        el("servoRangeTool").value = 0;
+        trigger(el("servoRangeTool"), 'input');
     });
 
-    $("#estepsTool").click(function() {
-        $.post("/estepsCalibration", {});
+    el("estepsTool").addEventListener("click", function() {
+        httpPost("/estepsCalibration");
     });
 
-    $("#invertLeftMotor").change(function() {
-        $.post("/setMotorInversion", {left: this.checked});
+    el("invertLeftMotor").addEventListener("change", function() {
+        httpPost("/setMotorInversion", {left: this.checked});
     });
 
-    $("#invertRightMotor").change(function() {
-        $.post("/setMotorInversion", {right: this.checked});
+    el("invertRightMotor").addEventListener("change", function() {
+        httpPost("/setMotorInversion", {right: this.checked});
     });
 
-    $("#invertServo").change(function() {
-        $.post("/setServoInversion", {inverted: this.checked});
+    el("invertServo").addEventListener("change", function() {
+        httpPost("/setServoInversion", {inverted: this.checked});
     });
 
-    $("#penLiftAmount").on('input', function() {
-        $("#penLiftValue").text($(this).val());
+    el("penLiftAmount").addEventListener("input", function() {
+        el("penLiftValue").textContent = this.value;
     });
 
-    $("#penLiftAmount").on('change', $.throttle(250, function() {
-        $.post("/setPenLift", {amount: $(this).val()});
+    el("penLiftAmount").addEventListener("change", throttle(250, function() {
+        httpPost("/setPenLift", {amount: this.value});
     }));
 
-    $(".phaseBack").click(function() {
-        const phase = $(this).data("phase");
-        $(".muralSlide").hide();
-        $("#loadingSlide").show();
-        $.post("/setPhase", {phase}, function(state) {
-            adaptToState(state);
-        }).fail(function() {
-            alert("Failed to go back");
-            location.reload();
+    document.querySelectorAll(".phaseBack").forEach(function(btn) {
+        btn.addEventListener("click", async function() {
+            const phase = this.dataset.phase;
+            hideAll(".muralSlide");
+            show("loadingSlide");
+            try {
+                const state = await httpPost("/setPhase", {phase});
+                adaptToState(state);
+            } catch {
+                alert("Failed to go back");
+                location.reload();
+            }
         });
     });
 
-    const toolsModal = $("#toolsModal")[0];
+    // Modal open/close
+    el("openToolsModal").addEventListener("click", function() {
+        el("toolsModal").classList.add("open");
+    });
 
-    toolsModal.addEventListener('hidden.bs.modal', function (event) {
+    el("closeToolsModal").addEventListener("click", closeToolsModal);
+
+    el("toolsModalBackdrop").addEventListener("click", closeToolsModal);
+
+    function closeToolsModal() {
+        el("toolsModal").classList.remove("open");
         client.rightRetractUp();
         client.leftRetractUp();
-    });
+    }
 
     svgControl.initSvgControl();
 
-    $("#loadingSlide").show();
+    show("loadingSlide");
 
-    // adaptToState({
-    //     phase: "BeginDrawing",
-    //     topDistance: 1727,
-    //     safeWidth: 1000,
-    //     homeX: 0,
-    //     homeY: 0,
-    // });
-
-    $.get("/getState", function(data) {
+    httpGet("/getState").then(function(data) {
         adaptToState(data);
-    }).fail(function() {
+    }).catch(function() {
         alert("Failed to retrieve state");
     });
 }
 
-function verifyUpload(state) {
-    $.ajax({
-            url: "/downloadCommands",
-            processData: false,
-            contentType: false,
-            type: 'GET',
-            success: function(data) {
-                const receivedData = data.split('\n');
-                const sentData = uploadConvertedCommands.split('\n');
-                if (receivedData.length !== sentData.length) {
-                    alert("Data verification failed");
-                    window.location.reload();
-                    return;
-                }
-                for (let i = 0; i < receivedData.length; i++) {
-                    if (receivedData[i] !== sentData[i]) {
-                        alert("Data verification failed");
-                        window.location.reload();
-                        return;
-                    }
-                }
-                setTimeout(function() {
-                    adaptToState(state);
-                }, 1000);
-            },
-            error: function(err) {
-                alert('Failed to download commands from Mural! ' + err);
-                window.location.reload();
-            },
-            xhr: function () {
-                var xhr = new window.XMLHttpRequest();
-                xhr.addEventListener("progress", function (evt) {
-                    if (evt.lengthComputable) {
-                        var percentComplete = evt.loaded / evt.total;
-                        percentComplete = parseInt(percentComplete * 100);
-                        $("#verificationProgress").attr("aria-valuemax", evt.total.toString());
-                        $("#verificationProgress").attr("aria-valuenow", evt.loaded.toString());
-                        $("#verificationProgress > .progress-bar").attr("style", `width: ${percentComplete}%`);
-                    }
-                }, false);
+async function verifyUpload(state) {
+    // state may be a string (from httpUpload), try to parse it
+    if (typeof state === 'string') {
+        try { state = JSON.parse(state); } catch {}
+    }
 
-                return xhr;
-            },
+    try {
+        const data = await httpDownload("/downloadCommands", function(evt) {
+            if (evt.lengthComputable) {
+                const pct = parseInt(evt.loaded / evt.total * 100);
+                const bar = el("verificationBar");
+                if (bar) bar.style.width = pct + '%';
+            }
         });
-    
+
+        const receivedData = data.split('\n');
+        const sentData = uploadConvertedCommands.split('\n');
+        if (receivedData.length !== sentData.length) {
+            alert("Data verification failed");
+            window.location.reload();
+            return;
+        }
+        for (let i = 0; i < receivedData.length; i++) {
+            if (receivedData[i] !== sentData[i]) {
+                alert("Data verification failed");
+                window.location.reload();
+                return;
+            }
+        }
+        setTimeout(function() {
+            adaptToState(state);
+        }, 1000);
+    } catch (err) {
+        alert('Failed to download commands from Mural! ' + err);
+        window.location.reload();
+    }
 }
 
 function adaptToState(state) {
-    $(".muralSlide").hide();
+    hideAll(".muralSlide");
     currentState = state;
 
     if (state.leftMotorInverted !== undefined) {
-        $("#invertLeftMotor").prop("checked", state.leftMotorInverted);
+        el("invertLeftMotor").checked = state.leftMotorInverted;
     }
     if (state.rightMotorInverted !== undefined) {
-        $("#invertRightMotor").prop("checked", state.rightMotorInverted);
+        el("invertRightMotor").checked = state.rightMotorInverted;
     }
     if (state.servoInverted !== undefined) {
-        $("#invertServo").prop("checked", state.servoInverted);
+        el("invertServo").checked = state.servoInverted;
     }
     if (state.penLiftAmount !== undefined) {
-        $("#penLiftAmount").val(state.penLiftAmount);
-        $("#penLiftValue").text(state.penLiftAmount);
+        el("penLiftAmount").value = state.penLiftAmount;
+        el("penLiftValue").textContent = state.penLiftAmount;
     }
 
     switch(state.phase) {
         case "RetractBelts":
-            $("#retractBeltsSlide").show();
+            show("retractBeltsSlide");
             break;
         case "SetTopDistance":
             if (state.topDistance > 0) {
-                $("#distanceInput").val(state.topDistance);
-                $("#drawingAreaInfo").text(`Drawing area: ${Math.round(state.topDistance * 0.6)}mm wide`);
+                el("distanceInput").value = state.topDistance;
+                el("drawingAreaInfo").textContent = `Drawing area: ${Math.round(state.topDistance * 0.6)}mm wide`;
             } else if (state.savedTopDistance > 0) {
-                $("#distanceInput").val(state.savedTopDistance);
-                $("#drawingAreaInfo").text(`Drawing area: ${Math.round(state.savedTopDistance * 0.6)}mm wide`);
+                el("distanceInput").value = state.savedTopDistance;
+                el("drawingAreaInfo").textContent = `Drawing area: ${Math.round(state.savedTopDistance * 0.6)}mm wide`;
             }
             if (state.savedTopDistance > 0) {
-                $("#quickStartSection").show();
+                show("quickStartSection");
             }
-            $("#distanceBetweenAnchorsSlide").show();
+            show("distanceBetweenAnchorsSlide");
             break;
         case "ExtendToHome":
-            $("#extendToHomeSlide").show();
+            show("extendToHomeSlide");
             if (state.moving || state.startedHoming) {
-                $("#extendToHome").prop( "disabled", true);
-                $("#extendingSpinner").css('visibility', 'visible');
+                el("extendToHome").disabled = true;
+                el("extendingSpinner").style.visibility = 'visible';
                 checkIfExtendedToHome();
             }
             break;
         case "PenCalibration":
             if (state.servoInverted) {
-                $.post("/setServo", {angle: 0});
-                $("#servoRange").val(90);
+                httpPost("/setServo", {angle: 0});
+                el("servoRange").value = 90;
             } else {
-                $.post("/setServo", {angle: 90});
-                $("#servoRange").val(0);
+                httpPost("/setServo", {angle: 90});
+                el("servoRange").value = 0;
             }
-            $("#penCalibrationSlide").show();
+            show("penCalibrationSlide");
             break;
         case "SvgSelect":
-            $("#svgUploadSlide").show();
+            show("svgUploadSlide");
             break;
         case "BeginDrawing":
-            $("#beginDrawingSlide").show();
+            show("beginDrawingSlide");
             break;
         default:
             alert("Unrecognized phase");
@@ -885,23 +829,21 @@ function adaptToState(state) {
 }
 
 function getInfillDensity() {
-    // Keep returning 0 for backward compat with worker validation
-    // Actual infill is now controlled by infillPattern + infillSpacing
     return getInfillPattern() === 'none' ? 0 : 1;
 }
 
 function getInfillPattern() {
-    return $("#infillPattern").val();
+    return el("infillPattern").value;
 }
 
 function getInfillSpacing() {
-    return parseInt($("#infillSpacing").val());
+    return parseInt(el("infillSpacing").value);
 }
 
 function getTurdSize() {
-    return parseInt($("#turdSize").val());
+    return parseInt(el("turdSize").value);
 }
 
 function getFlattenPaths() {
-    return $("#flattenPathsCheckbox").is(":checked");
+    return el("flattenPathsCheckbox").checked;
 }

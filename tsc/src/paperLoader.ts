@@ -8,7 +8,7 @@ export function loadPaper(): paper.PaperScope {
         return paperModule;
     } else {
         if (!loaded) {
-            importScripts("https://cdnjs.cloudflare.com/ajax/libs/paper.js/0.12.17/paper-full.min.js");
+            importScripts("/lib/paper-full.min.js");
             (self.paper as any as paper.PaperScope).install(self);
             loaded = true;
         }
