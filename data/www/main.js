@@ -5,6 +5,121 @@ import { httpGet, httpPost, httpUpload, httpUploadRaw, httpDownload, throttle, s
 let currentState = null;
 let currentWorker = null;
 let uploadConvertedCommands = null;
+let commandStats = null; // { drawDistance, travelDistance, penTransitions }
+
+// Pulley geometry constants (from movement.h)
+const CIRCUMFERENCE = 12.69 * Math.PI; // mm
+const STEPS_PER_ROTATION = 200 * 8;    // 1/8 microstepping
+const MOVE_SPEED_STEPS = 1500;
+
+function stepsToMmPerSec(steps) {
+    return steps * CIRCUMFERENCE / STEPS_PER_ROTATION;
+}
+
+function scanCommands(text) {
+    const lines = text.split('\n');
+    let penDown = false;
+    let prevX = null, prevY = null;
+    let drawDist = 0, travelDist = 0, transitions = 0;
+    let isGcode = !text.startsWith('d');
+
+    for (const raw of lines) {
+        const line = raw.trim();
+        if (!line) continue;
+
+        if (isGcode) {
+            const upper = line.toUpperCase();
+            // M3 = pen down, M5 = pen up
+            if (upper.startsWith('M3') && !upper.startsWith('M30')) {
+                if (!penDown) { penDown = true; transitions++; }
+                continue;
+            }
+            if (upper.startsWith('M5')) {
+                if (penDown) { penDown = false; transitions++; }
+                continue;
+            }
+            // G0/G1
+            const gMatch = upper.match(/^G([01])\b/);
+            if (!gMatch) continue;
+            const gCode = parseInt(gMatch[1]);
+            const xMatch = upper.match(/X([-\d.]+)/);
+            const yMatch = upper.match(/Y([-\d.]+)/);
+            const x = xMatch ? parseFloat(xMatch[1]) : prevX;
+            const y = yMatch ? parseFloat(yMatch[1]) : prevY;
+            if (x === null || y === null) { prevX = x; prevY = y; continue; }
+
+            const wantDown = (gCode === 1);
+            if (wantDown !== penDown) {
+                penDown = wantDown;
+                transitions++;
+            }
+
+            if (prevX !== null && prevY !== null) {
+                const d = Math.sqrt((x - prevX) ** 2 + (y - prevY) ** 2);
+                if (penDown) drawDist += d; else travelDist += d;
+            }
+            prevX = x;
+            prevY = y;
+        } else {
+            // Mural format
+            if (line.startsWith('d') || line.startsWith('h')) continue;
+            if (line.startsWith('p')) {
+                const newDown = line.charAt(1) === '1';
+                if (newDown !== penDown) { penDown = newDown; transitions++; }
+                continue;
+            }
+            const spaceIdx = line.indexOf(' ');
+            if (spaceIdx < 0) continue;
+            const x = parseFloat(line.substring(0, spaceIdx));
+            const y = parseFloat(line.substring(spaceIdx + 1));
+            if (isNaN(x) || isNaN(y)) continue;
+
+            if (prevX !== null && prevY !== null) {
+                const d = Math.sqrt((x - prevX) ** 2 + (y - prevY) ** 2);
+                if (penDown) drawDist += d; else travelDist += d;
+            }
+            prevX = x;
+            prevY = y;
+        }
+    }
+
+    return { drawDistance: drawDist, travelDistance: travelDist, penTransitions: transitions };
+}
+
+function updateTimeEstimate() {
+    const display = el("timeEstimate");
+    if (!display || !commandStats) {
+        if (display) display.textContent = '';
+        return;
+    }
+
+    const drawSpeed = parseInt(el("drawSpeedSlider").value) || 500;
+    const servoDelay = parseInt(el("servoDelayMain").value) || 200;
+    const penLift = currentState ? (currentState.penLiftAmount || 20) : 20;
+
+    const drawSpeedMm = stepsToMmPerSec(drawSpeed);
+    const travelSpeedMm = stepsToMmPerSec(MOVE_SPEED_STEPS);
+    const servoMoveSec = penLift / 90; // 90 deg/s servo speed
+
+    const drawTime = commandStats.drawDistance / drawSpeedMm;
+    const travelTime = commandStats.travelDistance / travelSpeedMm;
+    const penTime = commandStats.penTransitions * (servoMoveSec + servoDelay / 1000);
+
+    const totalSec = drawTime + travelTime + penTime;
+    const hours = Math.floor(totalSec / 3600);
+    const mins = Math.floor((totalSec % 3600) / 60);
+
+    let timeStr;
+    if (hours > 0) {
+        timeStr = `~${hours}h ${mins}m`;
+    } else if (mins > 0) {
+        timeStr = `~${mins}m`;
+    } else {
+        timeStr = '< 1m';
+    }
+
+    display.textContent = `Estimated draw time: ${timeStr}`;
+}
 
 const el = (id) => document.getElementById(id);
 const trigger = (element, eventName) => element.dispatchEvent(new Event(eventName, { bubbles: true }));
@@ -322,6 +437,7 @@ function init() {
         }
 
         uploadConvertedCommands = text;
+        commandStats = scanCommands(text);
 
         hideAll(".muralSlide");
         show("uploadProgressSlide");
@@ -466,6 +582,7 @@ function init() {
                     })
                     : e.data.payload.commands;
                 uploadConvertedCommands = offsetCommands.join('\n');
+                commandStats = scanCommands(uploadConvertedCommands);
                 const resultSvgJson = e.data.payload.svgJson;
                 const resultDataUrl = svgControl.convertJsonToDataURL(resultSvgJson, svgControl.getTargetWidth(), svgControl.getTargetHeight());
 
@@ -586,6 +703,7 @@ function init() {
 
     el("drawSpeedSlider").addEventListener("input", function() {
         el("drawSpeedValue").textContent = this.value;
+        updateTimeEstimate();
     });
 
     el("drawSpeedSlider").addEventListener("change", throttle(250, function() {
@@ -597,6 +715,7 @@ function init() {
         el("drawSpeedSlider").value = defaultSpeed;
         el("drawSpeedValue").textContent = defaultSpeed;
         httpPost("/setDrawSpeed", {speed: defaultSpeed});
+        updateTimeEstimate();
     });
 
     el("beginDrawing").addEventListener("click", function() {
@@ -697,6 +816,7 @@ function init() {
         el("servoDelay").value = value;
         el("servoDelayMain").value = value;
         httpPost("/setServoDelay", {delay: value});
+        updateTimeEstimate();
     }
 
     el("servoDelay").addEventListener("change", function() {
@@ -859,6 +979,7 @@ function adaptToState(state) {
                 el("drawSpeedSlider").value = state.drawSpeed;
                 el("drawSpeedValue").textContent = state.drawSpeed;
             }
+            updateTimeEstimate();
             show("beginDrawingSlide");
             break;
         default:
