@@ -12,6 +12,8 @@ class Runner {
     Display *display;
     void initTaskProvider();
     Task* getNextTask();
+    Task* getNextGcodeTask();
+    void calculateGcodeDistance();
     Task* currentTask;
     bool stopped;
     File openedFile;
@@ -20,8 +22,13 @@ class Runner {
     Movement::Point startPosition;
     Movement::Point targetPosition;
     int progress;
-    Task *finishingSequence[1];
+    Task *finishingSequence[2];
     int sequenceIx = 0;
+    bool isGcode;
+    bool gcPenDown;
+    Task* pendingTask;
+    double lastGcX;
+    double lastGcY;
     public:
     Runner(Movement *movement, Pen *pen, Display *display);
     void start();

@@ -24,7 +24,8 @@ Movement::Movement(Display *display)
     rightMotor->disableOutputs();
 
     topDistance = -1;
-   
+    drawSpeed = printSpeedSteps;
+
     moving = false;
     homed = false;
     startedHoming = false;
@@ -472,4 +473,14 @@ bool Movement::isLeftInverted() {
 
 bool Movement::isRightInverted() {
     return rightInverted;
+}
+
+int Movement::getDrawSpeed() {
+    return drawSpeed;
+}
+
+void Movement::setDrawSpeed(int speed) {
+    if (speed < 100) speed = 100;
+    if (speed > moveSpeedSteps) speed = moveSpeedSteps;
+    drawSpeed = speed;
 }

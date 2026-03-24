@@ -68,6 +68,7 @@ private:
     bool leftInverted;
     bool rightInverted;
     int cachedSavedTopDistance;
+    int drawSpeed;
     void setOrigin();
 
     struct Lengths {
@@ -135,6 +136,9 @@ public:
     bool isHomed();
     bool isLeftInverted();
     bool isRightInverted();
+
+    int getDrawSpeed();
+    void setDrawSpeed(int speed);
 };
 
 #endif

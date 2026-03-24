@@ -129,7 +129,7 @@
         <button class="btn btn-lg btn-primary mb-2" id="preview" disabled>Preview drawing</button>
         <hr>
         <h6 class="mb-2"><small class="text-muted">Or upload a pre-generated command file</small></h6>
-        <input type="file" class="mb-2" id="uploadRawCommands" accept=".txt,.mural">
+        <input type="file" class="mb-2" id="uploadRawCommands" accept=".txt,.mural,.gcode,.nc,.ngc">
         <div class="checkbox-row mb-2">
           <input type="checkbox" id="centerRawCommands" checked>
           <label for="centerRawCommands">Center drawing on paper</label>
@@ -181,6 +181,12 @@
       </div>
       <div id="beginDrawingSlide" class="muralSlide" style="display: none;">
         <h3 class="mb-5">Mural is ready!</h3>
+        <label for="drawSpeedSlider">Draw Speed (<span id="drawSpeedValue">500</span> steps/s)</label>
+        <div class="speed-control mb-2">
+          <input type="range" min="100" max="1500" step="50" id="drawSpeedSlider" value="500">
+          <button class="btn btn-sm btn-secondary" id="resetDrawSpeed">Reset</button>
+        </div>
+        <small class="text-muted mb-5" style="display:block;">Overrides any speed set in G-code files</small>
         <button class="btn btn-lg btn-primary mb-2" id="beginDrawing">Begin Drawing</button>
         <button class="btn btn-lg btn-secondary mb-2 phaseBack" data-phase="PenCalibration">Back</button>
         <button class="btn btn-lg btn-secondary mb-5" id="reset">Reset</button>

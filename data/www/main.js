@@ -1,6 +1,6 @@
 import * as svgControl from './svgControl.js';
 import * as client from './client.js';
-import { httpGet, httpPost, httpUpload, httpDownload, throttle, show, hide, hideAll } from './utils.js';
+import { httpGet, httpPost, httpUpload, httpUploadRaw, httpDownload, throttle, show, hide, hideAll } from './utils.js';
 
 let currentState = null;
 let currentWorker = null;
@@ -307,27 +307,27 @@ function init() {
         if (!file) return;
 
         let text = await file.text();
-        if (!text.startsWith('d')) {
+        const ext = file.name.split('.').pop().toLowerCase();
+        const isGcode = ['gcode', 'nc', 'ngc'].includes(ext);
+
+        if (!isGcode && !text.startsWith('d')) {
             alert('Invalid command file: must start with a distance header (d...)');
             this.value = '';
             return;
         }
 
-        if (el("centerRawCommands").checked && currentState) {
+        // Centering only applies to mural format files
+        if (!isGcode && el("centerRawCommands").checked && currentState) {
             text = centerRawCommands(text, currentState);
         }
 
         uploadConvertedCommands = text;
 
-        const commandsBlob = new Blob([text], { type: "text/plain" });
-        const formData = new FormData();
-        formData.append("commands", commandsBlob);
-
         hideAll(".muralSlide");
         show("uploadProgressSlide");
 
         try {
-            const data = await httpUpload("/uploadCommands", formData, updateUploadProgress);
+            const data = await httpUploadRaw("/uploadCommandsRaw", text, updateUploadProgress);
             verifyUpload(data);
         } catch (err) {
             alert('Upload to Mural failed! ' + err);
@@ -572,23 +572,31 @@ function init() {
         }
         el("acceptSvg").disabled = true;
 
-        const commandsBlob = new Blob([uploadConvertedCommands], {
-            type: "text/plain"
-        });
-
         hideAll(".muralSlide");
         show("uploadProgressSlide");
 
-        const formData = new FormData();
-        formData.append("commands", commandsBlob);
-
         try {
-            const data = await httpUpload("/uploadCommands", formData, updateUploadProgress);
+            const data = await httpUploadRaw("/uploadCommandsRaw", uploadConvertedCommands, updateUploadProgress);
             verifyUpload(data);
         } catch (err) {
             alert('Upload to Mural failed! ' + err);
             window.location.reload();
         }
+    });
+
+    el("drawSpeedSlider").addEventListener("input", function() {
+        el("drawSpeedValue").textContent = this.value;
+    });
+
+    el("drawSpeedSlider").addEventListener("change", throttle(250, function() {
+        httpPost("/setDrawSpeed", {speed: this.value});
+    }));
+
+    el("resetDrawSpeed").addEventListener("click", function() {
+        const defaultSpeed = currentState ? currentState.defaultDrawSpeed : 500;
+        el("drawSpeedSlider").value = defaultSpeed;
+        el("drawSpeedValue").textContent = defaultSpeed;
+        httpPost("/setDrawSpeed", {speed: defaultSpeed});
     });
 
     el("beginDrawing").addEventListener("click", function() {
@@ -821,6 +829,10 @@ function adaptToState(state) {
             show("svgUploadSlide");
             break;
         case "BeginDrawing":
+            if (state.drawSpeed !== undefined) {
+                el("drawSpeedSlider").value = state.drawSpeed;
+                el("drawSpeedValue").textContent = state.drawSpeed;
+            }
             show("beginDrawingSlide");
             break;
         default:

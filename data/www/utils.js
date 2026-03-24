@@ -57,6 +57,29 @@ export function httpUpload(url, formData, onProgress) {
     });
 }
 
+// Raw body upload with progress — sends text directly as POST body (no multipart)
+export function httpUploadRaw(url, text, onProgress) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', url);
+        xhr.setRequestHeader('Content-Type', 'text/plain');
+        if (onProgress) {
+            xhr.upload.addEventListener('progress', onProgress);
+        }
+        xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                let result = xhr.responseText;
+                try { result = JSON.parse(result); } catch {}
+                resolve(result);
+            } else {
+                reject(new Error(`Upload failed: ${xhr.status}`));
+            }
+        };
+        xhr.onerror = () => reject(new Error('Upload failed'));
+        xhr.send(text);
+    });
+}
+
 // Download with progress — for verification downloads
 export function httpDownload(url, onProgress) {
     return new Promise((resolve, reject) => {

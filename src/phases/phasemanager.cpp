@@ -83,6 +83,8 @@ void PhaseManager::respondWithState(AsyncWebServerRequest *request) {
     root["penLiftAmount"] = pen->getLiftAmount();
     root["savedTopDistance"] = movement->getSavedTopDistance();
     root["savedPenDistance"] = pen->getSavedPenDistance();
+    root["drawSpeed"] = movement->getDrawSpeed();
+    root["defaultDrawSpeed"] = printSpeedSteps;
 
     root.printTo(*response);
     request->send(response);

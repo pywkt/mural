@@ -466,6 +466,20 @@ label {
   vertical-align: middle;
 }
 
+/* Speed control */
+.speed-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.speed-control input[type="range"] {
+  flex: 1;
+}
+.speed-control .btn {
+  width: auto;
+  white-space: nowrap;
+}
+
 /* Spacing utilities */
 .mb-1 { margin-bottom: 0.25rem; }
 .mb-2 { margin-bottom: 0.5rem; }

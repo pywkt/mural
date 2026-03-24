@@ -119,6 +119,14 @@ void setup()
         request->send(200);
     });
 
+    server.on("/setDrawSpeed", HTTP_POST, [](AsyncWebServerRequest *request) {
+        if (request->hasParam("speed", true)) {
+            int speed = request->getParam("speed", true)->value().toInt();
+            movement->setDrawSpeed(speed);
+        }
+        request->send(200);
+    });
+
     server.on("/setServoInversion", HTTP_POST, [](AsyncWebServerRequest *request) {
         if (request->hasParam("inverted", true)) {
             pen->setInverted(request->getParam("inverted", true)->value() == "true");
@@ -156,8 +164,45 @@ void setup()
         "/uploadCommands", HTTP_POST,
         [](AsyncWebServerRequest *request) {
             handleGetState(request);
-        }, 
+        },
         handleUpload
+    );
+
+    // Raw body upload — avoids multipart parsing overhead for large files
+    static File rawUploadFile;
+    server.on("/uploadCommandsRaw", HTTP_POST,
+        [](AsyncWebServerRequest *request) {
+            if (rawUploadFile) {
+                rawUploadFile.close();
+                Serial.println("Raw upload finished");
+                // Transition phase (same logic as SvgSelectPhase::handleUpload)
+                if (movement->isHomed()) {
+                    phaseManager->setPhase(PhaseManager::PenCalibration);
+                } else {
+                    phaseManager->setPhase(PhaseManager::RetractBelts);
+                }
+            }
+            handleGetState(request);
+        },
+        nullptr,
+        [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
+            if (index == 0) {
+                if (LittleFS.exists("/commands")) {
+                    LittleFS.remove("/commands");
+                }
+                Serial.printf("Raw upload: %d bytes total, %d bytes free\n", total, LittleFS.totalBytes() - LittleFS.usedBytes());
+                if (LittleFS.totalBytes() - LittleFS.usedBytes() < total) {
+                    Serial.println("Not enough space on LittleFS");
+                    request->send(400, "text/plain", "Not enough space for upload");
+                    return;
+                }
+                rawUploadFile = LittleFS.open("/commands", "w");
+                Serial.println("Raw upload started");
+            }
+            if (rawUploadFile && len) {
+                rawUploadFile.write(data, len);
+            }
+        }
     );
 
     server.on(
