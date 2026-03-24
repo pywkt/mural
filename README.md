@@ -16,7 +16,10 @@ The web UI has been rewritten to work **fully offline** with zero CDN dependenci
 - **Drawing completion detection** — The UI polls the ESP32 and notifies you when a drawing finishes.
 - **Paper size selection** — Choose from standard paper sizes (Letter, A4, A3 in portrait/landscape) or enter custom dimensions. The SVG is scaled to fit within the selected paper and centered on the home position.
 - **Margins** — Configurable X/Y margins (in mm) that inset the drawing area for both SVG and raw command uploads.
-- **Raw command upload** — Upload pre-generated `.txt` or `.mural` command files directly, bypassing SVG processing. An optional "Center drawing on paper" checkbox applies the current paper size and margin settings.
+- **Raw command upload** — Upload pre-generated `.txt` or `.mural` command files directly, bypassing SVG processing. An optional "Center drawing on paper" checkbox applies the current paper size and margin settings. Uses a raw body upload to avoid ESP32 heap exhaustion on large files.
+- **G-code support** — Upload `.gcode`, `.nc`, or `.ngc` files. The firmware auto-detects the format and parses G0/G1 (movement) and M3/M5 (pen control) commands. Unsupported codes are silently ignored. Progress tracking works via a first-pass distance calculation.
+- **Draw speed control** — Adjustable draw speed slider on the Begin Drawing screen (100–1500 steps/s). Resets to the default 500 steps/s with a button.
+- **Estimated draw time** — Shows a rough time estimate on the Begin Drawing screen based on pen-up/pen-down distances, pen transitions, draw speed, and servo delay. Updates live when settings change.
 - **Infill patterns** — Choose from horizontal, vertical, diagonal, crosshatch, or concentric infill patterns with adjustable spacing, replacing the old 5-step density slider.
 - **Back buttons** — Navigate backwards through all setup steps.
 
@@ -28,6 +31,7 @@ A gear icon on the setup page opens a tools modal with:
 - **Motor inversion toggles** — Invert left/right motor direction, persisted in NVS.
 - **Servo inversion toggle** — Invert the servo direction, persisted in NVS. Pen calibration and lift behavior adapt automatically.
 - **Pen lift adjustment** — Configurable pen lift amount (in degrees), persisted in NVS.
+- **Servo settle delay** — Adjustable delay (0–1000ms) after pen movements, persisted in NVS. Reduce to eliminate ink dots at line starts from high-flow pens. Available in both the tools modal and the Begin Drawing screen.
 - **E-steps calibration** — Extend belts 1000mm for calibration.
 
 ## Building
@@ -48,6 +52,13 @@ To flash the firmware and upload the filesystem:
 pio run -t upload
 pio run -t uploadfs
 ```
+
+## Command Format
+
+The plotter accepts two command formats:
+
+- **Mural format** — Simple text with `d`/`h` headers, `p0`/`p1` pen commands, and `x y` coordinates. See [PLOTTER_COMMAND_FORMAT.md](PLOTTER_COMMAND_FORMAT.md) for the full specification.
+- **G-code** — Standard 2D plotter G-code (`G0` for travel, `G1` for drawing, `M3`/`M5` for pen control). Feed rates and other parameters are ignored — the firmware uses its own configurable draw speed.
 
 ## Additional Information
 
