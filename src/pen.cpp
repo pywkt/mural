@@ -8,7 +8,7 @@ bool shouldStop(int currentDegree, int targetDegree, bool positive) {
     }
 }
 
-void doSlowMove(Pen* pen, int startDegree, int targetDegree, int speedDegPerSec) {
+void doSlowMove(Pen* pen, int startDegree, int targetDegree, int speedDegPerSec, int settleDelay) {
     if (startDegree == targetDegree) {
         return;
     }
@@ -39,7 +39,7 @@ void doSlowMove(Pen* pen, int startDegree, int targetDegree, int speedDegPerSec)
         currentDegree = startDegree + progressDegrees;
     }
     pen->setRawValue(targetDegree);
-    delay(200);
+    if (settleDelay > 0) delay(settleDelay);
 }
 
 
@@ -48,6 +48,7 @@ Pen::Pen()
     preferences.begin("mural_pen", false);
     inverted = preferences.getBool("inverted", false);
     liftAmount = preferences.getInt("liftAmt", DEFAULT_LIFT_AMOUNT);
+    servoDelay = preferences.getInt("srvDelay", DEFAULT_SERVO_DELAY);
     cachedSavedPenDistance = preferences.getInt("penDist", -1);
 
     servo = new Servo();
@@ -118,7 +119,7 @@ void Pen::slowUp() {
     }
 
     int upPos = getUpPosition();
-    doSlowMove(this, currentPosition, upPos, slowSpeedDegPerSec);
+    doSlowMove(this, currentPosition, upPos, slowSpeedDegPerSec, servoDelay);
     currentPosition = upPos;
 }
 
@@ -136,10 +137,19 @@ void Pen::slowDown() {
         throw std::invalid_argument("not ready");
     }
 
-    doSlowMove(this, currentPosition, penDistance, slowSpeedDegPerSec);
+    doSlowMove(this, currentPosition, penDistance, slowSpeedDegPerSec, servoDelay);
     currentPosition = penDistance;
 }
 
 bool Pen::isDown() {
     return currentPosition == penDistance;
+}
+
+void Pen::setServoDelay(int ms) {
+    servoDelay = constrain(ms, 0, 1000);
+    preferences.putInt("srvDelay", servoDelay);
+}
+
+int Pen::getServoDelay() {
+    return servoDelay;
 }

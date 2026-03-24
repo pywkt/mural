@@ -466,6 +466,17 @@ label {
   vertical-align: middle;
 }
 
+/* Input with reset button */
+.input-with-reset {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.input-with-reset .btn {
+  width: auto;
+  white-space: nowrap;
+}
+
 /* Speed control */
 .speed-control {
   display: flex;

@@ -81,6 +81,7 @@ void PhaseManager::respondWithState(AsyncWebServerRequest *request) {
     root["rightMotorInverted"] = movement->isRightInverted();
     root["servoInverted"] = pen->isInverted();
     root["penLiftAmount"] = pen->getLiftAmount();
+    root["servoDelay"] = pen->getServoDelay();
     root["savedTopDistance"] = movement->getSavedTopDistance();
     root["savedPenDistance"] = pen->getSavedPenDistance();
     root["drawSpeed"] = movement->getDrawSpeed();

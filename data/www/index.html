@@ -232,6 +232,12 @@
         </div>
         <label for="penLiftAmount">Pen Lift (<span id="penLiftValue">20</span>&deg;)</label>
         <input type="range" class="mb-5" min="5" max="90" step="5" id="penLiftAmount" value="20">
+        <label for="servoDelay">Servo Settle Delay (ms)</label>
+        <div class="input-with-reset mb-2">
+          <input type="number" id="servoDelay" value="200" min="0" max="1000" step="10" style="width:80px;">
+          <button class="btn btn-sm btn-secondary" id="resetServoDelay">Reset</button>
+        </div>
+        <small class="text-muted mb-5" style="display:block;">Wait time after pen moves. Reduce if ink dots appear at line starts.</small>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" id="closeToolsModalFooter" onclick="document.getElementById('closeToolsModal').click()">Close</button>

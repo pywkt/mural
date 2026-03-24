@@ -693,6 +693,15 @@ function init() {
         httpPost("/setPenLift", {amount: this.value});
     }));
 
+    el("servoDelay").addEventListener("change", function() {
+        httpPost("/setServoDelay", {delay: this.value});
+    });
+
+    el("resetServoDelay").addEventListener("click", function() {
+        el("servoDelay").value = 200;
+        httpPost("/setServoDelay", {delay: 200});
+    });
+
     document.querySelectorAll(".phaseBack").forEach(function(btn) {
         btn.addEventListener("click", async function() {
             const phase = this.dataset.phase;
@@ -788,6 +797,9 @@ function adaptToState(state) {
     if (state.penLiftAmount !== undefined) {
         el("penLiftAmount").value = state.penLiftAmount;
         el("penLiftValue").textContent = state.penLiftAmount;
+    }
+    if (state.servoDelay !== undefined) {
+        el("servoDelay").value = state.servoDelay;
     }
 
     switch(state.phase) {

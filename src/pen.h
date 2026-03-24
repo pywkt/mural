@@ -3,12 +3,14 @@
 #include <ESP32Servo.h>
 #include <Preferences.h>
 const int DEFAULT_LIFT_AMOUNT = 20;
+const int DEFAULT_SERVO_DELAY = 200;
 class Pen {
     private:
     Servo *servo;
     Preferences preferences;
     bool inverted;
     int liftAmount;
+    int servoDelay;
     int penDistance = -1;
     int cachedSavedPenDistance;
     int slowSpeedDegPerSec = 90;
@@ -26,6 +28,8 @@ class Pen {
     bool isInverted();
     void setLiftAmount(int amount);
     int getLiftAmount();
+    void setServoDelay(int ms);
+    int getServoDelay();
     bool isCalibrated();
     int getSavedPenDistance();
     void restorePenDistance();

@@ -127,6 +127,14 @@ void setup()
         request->send(200);
     });
 
+    server.on("/setServoDelay", HTTP_POST, [](AsyncWebServerRequest *request) {
+        if (request->hasParam("delay", true)) {
+            int ms = request->getParam("delay", true)->value().toInt();
+            pen->setServoDelay(ms);
+        }
+        request->send(200);
+    });
+
     server.on("/setServoInversion", HTTP_POST, [](AsyncWebServerRequest *request) {
         if (request->hasParam("inverted", true)) {
             pen->setInverted(request->getParam("inverted", true)->value() == "true");
