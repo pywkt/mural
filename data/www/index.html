@@ -187,6 +187,12 @@
           <button class="btn btn-sm btn-secondary" id="resetDrawSpeed">Reset</button>
         </div>
         <small class="text-muted mb-5" style="display:block;">Overrides any speed set in G-code files</small>
+        <label for="servoDelayMain">Servo Settle Delay (ms)</label>
+        <div class="input-with-reset mb-2">
+          <input type="number" id="servoDelayMain" value="200" min="0" max="1000" step="10" style="width:80px;">
+          <button class="btn btn-sm btn-secondary" id="resetServoDelayMain">Reset</button>
+        </div>
+        <small class="text-muted mb-5" style="display:block;">Reduce if ink dots appear at line starts</small>
         <button class="btn btn-lg btn-primary mb-2" id="beginDrawing">Begin Drawing</button>
         <button class="btn btn-lg btn-secondary mb-2 phaseBack" data-phase="PenCalibration">Back</button>
         <button class="btn btn-lg btn-secondary mb-5" id="reset">Reset</button>

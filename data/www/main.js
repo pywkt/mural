@@ -693,13 +693,26 @@ function init() {
         httpPost("/setPenLift", {amount: this.value});
     }));
 
+    function updateServoDelay(value) {
+        el("servoDelay").value = value;
+        el("servoDelayMain").value = value;
+        httpPost("/setServoDelay", {delay: value});
+    }
+
     el("servoDelay").addEventListener("change", function() {
-        httpPost("/setServoDelay", {delay: this.value});
+        updateServoDelay(this.value);
+    });
+
+    el("servoDelayMain").addEventListener("change", function() {
+        updateServoDelay(this.value);
     });
 
     el("resetServoDelay").addEventListener("click", function() {
-        el("servoDelay").value = 200;
-        httpPost("/setServoDelay", {delay: 200});
+        updateServoDelay(200);
+    });
+
+    el("resetServoDelayMain").addEventListener("click", function() {
+        updateServoDelay(200);
     });
 
     document.querySelectorAll(".phaseBack").forEach(function(btn) {
@@ -800,6 +813,7 @@ function adaptToState(state) {
     }
     if (state.servoDelay !== undefined) {
         el("servoDelay").value = state.servoDelay;
+        el("servoDelayMain").value = state.servoDelay;
     }
 
     switch(state.phase) {
