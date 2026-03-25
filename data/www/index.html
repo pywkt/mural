@@ -245,6 +245,10 @@
           <button class="btn btn-sm btn-secondary" id="resetServoDelay">Reset</button>
         </div>
         <small class="text-muted mb-5" style="display:block;">Wait time after pen moves. Reduce if ink dots appear at line starts.</small>
+        <button class="btn btn-lg btn-secondary mb-2" id="debugInfoBtn">Debug Info</button>
+        <div id="debugInfoPanel" style="display:none;" class="debug-panel mb-5">
+          <div id="debugInfoContent"></div>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" id="closeToolsModalFooter" onclick="document.getElementById('closeToolsModal').click()">Close</button>

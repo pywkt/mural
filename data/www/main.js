@@ -835,6 +835,41 @@ function init() {
         updateServoDelay(200);
     });
 
+    el("debugInfoBtn").addEventListener("click", async function() {
+        const panel = el("debugInfoPanel");
+        const content = el("debugInfoContent");
+
+        if (panel.style.display !== 'none') {
+            panel.style.display = 'none';
+            return;
+        }
+
+        content.textContent = 'Loading...';
+        panel.style.display = '';
+
+        try {
+            const info = await httpGet("/debug");
+            const uptime = info.uptimeSeconds;
+            const hours = Math.floor(uptime / 3600);
+            const mins = Math.floor((uptime % 3600) / 60);
+            const secs = uptime % 60;
+
+            const freeHeapPct = Math.round(info.freeHeap / info.heapSize * 100);
+            const fsFreePct = Math.round((info.fsTotal - info.fsUsed) / info.fsTotal * 100);
+
+            content.innerHTML =
+                `<b>Last Reset:</b> ${info.resetReason}<br>` +
+                `<b>Uptime:</b> ${hours}h ${mins}m ${secs}s<br>` +
+                `<b>Free Heap:</b> ${(info.freeHeap / 1024).toFixed(1)}KB / ${(info.heapSize / 1024).toFixed(1)}KB (${freeHeapPct}%)<br>` +
+                `<b>Min Free Heap:</b> ${(info.minFreeHeap / 1024).toFixed(1)}KB<br>` +
+                `<b>WiFi RSSI:</b> ${info.wifiRSSI} dBm<br>` +
+                `<b>IP:</b> ${info.wifiIP}<br>` +
+                `<b>Filesystem:</b> ${(info.fsUsed / 1024).toFixed(1)}KB / ${(info.fsTotal / 1024).toFixed(1)}KB (${fsFreePct}% free)`;
+        } catch (err) {
+            content.textContent = 'Failed to load debug info: ' + err;
+        }
+    });
+
     document.querySelectorAll(".phaseBack").forEach(function(btn) {
         btn.addEventListener("click", async function() {
             const phase = this.dataset.phase;

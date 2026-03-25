@@ -491,6 +491,17 @@ label {
   white-space: nowrap;
 }
 
+/* Debug panel */
+.debug-panel {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  font-family: monospace;
+  line-height: 1.6;
+}
+
 /* Spacing utilities */
 .mb-1 { margin-bottom: 0.25rem; }
 .mb-2 { margin-bottom: 0.5rem; }

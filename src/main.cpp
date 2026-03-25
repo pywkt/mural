@@ -11,6 +11,8 @@
 #include "pen.h"
 #include "display.h"
 #include "phases/phasemanager.h"
+#include "AsyncJson.h"
+#include "ArduinoJson.h"
 
 AsyncWebServer server(80);
 
@@ -167,6 +169,48 @@ void setup()
 
     server.on("/getState", HTTP_GET, [](AsyncWebServerRequest *request)
               { handleGetState(request); });
+
+    server.on("/debug", HTTP_GET, [](AsyncWebServerRequest *request) {
+        AsyncResponseStream *response = request->beginResponseStream("application/json");
+        DynamicJsonBuffer jsonBuffer;
+        JsonObject &root = jsonBuffer.createObject();
+
+        // Reset reason
+        esp_reset_reason_t reason = esp_reset_reason();
+        const char* reasonStr;
+        switch (reason) {
+            case ESP_RST_POWERON:  reasonStr = "Power on"; break;
+            case ESP_RST_SW:      reasonStr = "Software reset"; break;
+            case ESP_RST_PANIC:   reasonStr = "Exception/panic"; break;
+            case ESP_RST_INT_WDT: reasonStr = "Interrupt watchdog"; break;
+            case ESP_RST_TASK_WDT: reasonStr = "Task watchdog"; break;
+            case ESP_RST_WDT:     reasonStr = "Other watchdog"; break;
+            case ESP_RST_DEEPSLEEP: reasonStr = "Deep sleep wake"; break;
+            case ESP_RST_BROWNOUT: reasonStr = "Brownout"; break;
+            case ESP_RST_SDIO:    reasonStr = "SDIO"; break;
+            default:              reasonStr = "Unknown"; break;
+        }
+        root["resetReason"] = reasonStr;
+
+        // Memory
+        root["freeHeap"] = ESP.getFreeHeap();
+        root["minFreeHeap"] = ESP.getMinFreeHeap();
+        root["heapSize"] = ESP.getHeapSize();
+
+        // Uptime
+        root["uptimeSeconds"] = (long)(millis() / 1000);
+
+        // WiFi
+        root["wifiRSSI"] = WiFi.RSSI();
+        root["wifiIP"] = WiFi.localIP().toString();
+
+        // Filesystem
+        root["fsTotal"] = LittleFS.totalBytes();
+        root["fsUsed"] = LittleFS.usedBytes();
+
+        root.printTo(*response);
+        request->send(response);
+    });
 
     server.on(
         "/uploadCommands", HTTP_POST,
