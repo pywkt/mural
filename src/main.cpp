@@ -13,6 +13,7 @@
 #include "phases/phasemanager.h"
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
+#include <esp_task_wdt.h>
 
 AsyncWebServer server(80);
 
@@ -274,7 +275,11 @@ void setup()
     Serial.println("Server started");
 
     display->displayHomeScreen("http://" + WiFi.localIP().toString(), "or", "http://mural.local");
-    
+
+    // Subscribe the main loop task to the task watchdog with a generous timeout
+    esp_task_wdt_init(30, true);  // 30 second timeout, panic on trigger
+    esp_task_wdt_add(NULL);       // Add current task (loopTask)
+    Serial.println("Task watchdog configured (30s timeout)");
 }
 
 void loop()
@@ -282,4 +287,5 @@ void loop()
     movement->runSteppers();
     runner->run();
     phaseManager->getCurrentPhase()->loopPhase();
+    esp_task_wdt_reset();
 }
