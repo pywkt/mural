@@ -141,6 +141,16 @@ For example, with Letter paper (216 x 279mm) on a 615mm-wide drawing area:
 - Valid X range: 199.5 to 415.5
 - Valid Y range: 210.5 to 489.5
 
+## Upload & Storage
+
+The format above describes the logical, uncompressed content. On the wire and on disk the file is **gzipped**:
+
+- Clients POST gzip-compressed bytes (of the plain-text content described above) to `/uploadCommandsRaw`.
+- The firmware stores the file as-is at `/commands.gz` on LittleFS.
+- At drawing time the runner stream-decompresses it on the fly.
+
+See `data/www/utils.js` (`httpUploadRaw`) for a reference client implementation using the browser's `CompressionStream('gzip')` API.
+
 ## Summary of Parameters Your App Needs
 
 | Parameter | How to get it | Example |

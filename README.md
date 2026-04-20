@@ -10,6 +10,10 @@ This fork adds a number of web UI improvements and quality-of-life features to t
 
 The web UI has been rewritten to work **fully offline** with zero CDN dependencies. Bootstrap, jQuery, jquery-throttle-debounce, the LESS compiler, and Bootstrap Icons have all been replaced with vanilla HTML, CSS, and JavaScript. The paper.js library is now served locally from the ESP32's flash storage.
 
+### Gzip Compression
+
+Static web assets are gzipped at build time; uploaded command files are gzipped in the browser (via `CompressionStream`) and stream-decompressed on the ESP32 at drawing time using the ROM-resident `tinfl_decompress` (no library dependency). Shrinks the web UI from ~370 KB to ~110 KB on LittleFS and typical command files by ~70%, freeing meaningful headroom for larger drawings.
+
 ### New Features
 
 - **Quick Start** — Skip the full setup flow and resume drawing immediately if the plotter is still at its home position. The top distance and pen calibration are cached in NVS.
