@@ -240,16 +240,15 @@ void setup()
         nullptr,
         [](AsyncWebServerRequest *request, uint8_t *data, size_t len, size_t index, size_t total) {
             if (index == 0) {
-                if (LittleFS.exists("/commands")) {
-                    LittleFS.remove("/commands");
-                }
+                if (LittleFS.exists("/commands")) LittleFS.remove("/commands");
+                if (LittleFS.exists("/commands.gz")) LittleFS.remove("/commands.gz");
                 Serial.printf("Raw upload: %d bytes total, %d bytes free\n", total, LittleFS.totalBytes() - LittleFS.usedBytes());
                 if (LittleFS.totalBytes() - LittleFS.usedBytes() < total) {
                     Serial.println("Not enough space on LittleFS");
                     request->send(400, "text/plain", "Not enough space for upload");
                     return;
                 }
-                rawUploadFile = LittleFS.open("/commands", "w");
+                rawUploadFile = LittleFS.open("/commands.gz", "w");
                 Serial.println("Raw upload started");
             }
             if (rawUploadFile && len) {

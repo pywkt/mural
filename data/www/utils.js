@@ -57,12 +57,16 @@ export function httpUpload(url, formData, onProgress) {
     });
 }
 
-// Raw body upload with progress — sends text directly as POST body (no multipart)
-export function httpUploadRaw(url, text, onProgress) {
+// Raw body upload with progress — gzips the text and sends the compressed bytes
+export async function httpUploadRaw(url, text, onProgress) {
+    const encoded = new TextEncoder().encode(text);
+    const stream = new Blob([encoded]).stream().pipeThrough(new CompressionStream('gzip'));
+    const gzipped = await new Response(stream).arrayBuffer();
+
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', url);
-        xhr.setRequestHeader('Content-Type', 'text/plain');
+        xhr.setRequestHeader('Content-Type', 'application/gzip');
         if (onProgress) {
             xhr.upload.addEventListener('progress', onProgress);
         }
@@ -76,7 +80,7 @@ export function httpUploadRaw(url, text, onProgress) {
             }
         };
         xhr.onerror = () => reject(new Error('Upload failed'));
-        xhr.send(text);
+        xhr.send(gzipped);
     });
 }
 

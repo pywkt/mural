@@ -5,6 +5,7 @@
 #include "pen.h"
 #include "display.h"
 #include "LittleFS.h"
+#include "gzipfilereader.h"
 class Runner {
     private:
     Movement *movement;
@@ -16,7 +17,7 @@ class Runner {
     void calculateGcodeDistance();
     Task* currentTask;
     bool stopped;
-    File openedFile;
+    GzipFileReader openedFile;
     double totalDistance;
     double distanceSoFar;
     Movement::Point startPosition;

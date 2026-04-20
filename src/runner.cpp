@@ -20,7 +20,7 @@ Runner::Runner(Movement *movement, Pen *pen, Display *display) {
 }
 
 void Runner::initTaskProvider() {
-    openedFile = LittleFS.open("/commands");
+    openedFile.open("/commands.gz");
     if (!openedFile || !openedFile.available()) {
         Serial.println("Failed to open file");
         throw std::invalid_argument("No File");

@@ -11,9 +11,8 @@ void SvgSelectPhase::handleUpload(AsyncWebServerRequest *request, String filenam
 {
     if (!index)
     {
-        if (LittleFS.exists("/commands")) {
-            LittleFS.remove("/commands");
-        }
+        if (LittleFS.exists("/commands")) LittleFS.remove("/commands");
+        if (LittleFS.exists("/commands.gz")) LittleFS.remove("/commands.gz");
 
         Serial.printf("%d bytes total, %d bytes free\n",  LittleFS.totalBytes(), LittleFS.totalBytes() - LittleFS.usedBytes());
         Serial.printf("Upload size: %d bytes\n", request->contentLength());
@@ -23,8 +22,8 @@ void SvgSelectPhase::handleUpload(AsyncWebServerRequest *request, String filenam
             request->send(400, "text/plain", "Not enough space for upload");
             return;
         }
-            
-        request->_tempFile = LittleFS.open("/commands", "w");
+
+        request->_tempFile = LittleFS.open("/commands.gz", "w");
         Serial.println("Upload started");
     }
 
