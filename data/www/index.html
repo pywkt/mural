@@ -337,20 +337,19 @@
 
         <section class="settings-section">
           <h6 class="settings-section-title">Pen behavior</h6>
-          <div class="settings-grid-2">
-            <div>
-              <label for="penLiftAmount">Pen Lift (<span id="penLiftValue">20</span>&deg;)</label>
-              <input type="range" min="5" max="90" step="5" id="penLiftAmount" value="20">
-            </div>
-            <div>
-              <label for="servoDelay">Servo Delay (ms)</label>
-              <div class="input-with-reset">
-                <input type="number" id="servoDelay" value="200" min="0" max="1000" step="10" style="width:80px;">
-                <button class="btn btn-sm btn-secondary" id="resetServoDelay">Reset</button>
-              </div>
-            </div>
+          <div class="mb-3">
+            <label for="penLiftAmount">Pen Lift (<span id="penLiftValue">20</span>&deg;)</label>
+            <input type="range" min="5" max="90" step="5" id="penLiftAmount" value="20">
+            <small class="setting-help">Degrees the servo rotates to pull the pen off the wall between strokes. Raise for more clearance during travel; lower for quicker pen-up/pen-down.</small>
           </div>
-          <small class="text-muted" style="display:block;">Servo delay: wait time after pen moves. Reduce if ink dots appear at line starts.</small>
+          <div>
+            <label for="servoDelay">Servo Delay (ms)</label>
+            <div class="input-with-reset">
+              <input type="number" id="servoDelay" value="200" min="0" max="1000" step="10" style="width:80px;">
+              <button class="btn btn-sm btn-secondary" id="resetServoDelay">Reset</button>
+            </div>
+            <small class="setting-help">Time the plotter waits after each pen up/down so the servo can finish its motion before the motors move. Raise if the pen drags during travel; lower if ink pools at the start of each line.</small>
+          </div>
         </section>
       </div>
       <div class="modal-footer">
