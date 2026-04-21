@@ -245,6 +245,17 @@ function init() {
         }
     });
 
+    el("continueArtwork").addEventListener("click", async function() {
+        try {
+            const targetPhase = PHASE_ORDER[maxPhaseIdx] || "RetractBelts";
+            const state = await httpPost("/setPhase", {phase: targetPhase});
+            adaptToState(state);
+        } catch {
+            alert("Failed to continue");
+            location.reload();
+        }
+    });
+
     function getServoValueFromInputValue() {
         const inputValue = parseInt(el("servoRange").value);
         const value = 90 - inputValue;
@@ -1054,10 +1065,13 @@ function adaptToState(state) {
                 el("servoRange").value = 0;
             }
             break;
-        case "SvgSelect":
+        case "SvgSelect": {
             hideAll(".muralSlide");
             show("svgUploadSlide");
+            const svgIdx = PHASE_ORDER.indexOf("SvgSelect");
+            el("continueArtwork").style.display = (maxPhaseIdx > svgIdx) ? "" : "none";
             break;
+        }
         case "BeginDrawing":
             if (state.drawSpeed !== undefined) {
                 el("drawSpeedSlider").value = state.drawSpeed;
