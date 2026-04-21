@@ -75,6 +75,118 @@ body {
   width: 100%;
 }
 
+@media (min-width: 720px) {
+  .app-container {
+    max-width: 820px;
+  }
+}
+
+.dashboard {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.875rem;
+  text-align: left;
+}
+
+@media (min-width: 720px) {
+  .dashboard {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Card */
+.card {
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--card);
+  padding: 1rem 1.125rem;
+  transition: border-color 0.2s, background-color 0.2s, opacity 0.2s;
+  min-width: 0;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.card-header h5 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.card-status {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--muted-fg);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.card-summary {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--muted-fg);
+}
+
+.card-summary .summary-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-summary .btn {
+  width: auto;
+  flex-shrink: 0;
+}
+
+.card-body {
+  display: none;
+  margin-top: 0.875rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--border);
+}
+
+/* States */
+.card.locked {
+  opacity: 0.55;
+  background: var(--muted);
+}
+.card.locked .card-header h5 {
+  color: var(--muted-fg);
+}
+.card.locked::before {
+  content: '';
+}
+
+.card.active {
+  border-color: var(--fg);
+  box-shadow: 0 0 0 1px var(--fg);
+}
+.card.active .card-status::before {
+  content: 'In progress';
+}
+.card.active .card-body {
+  display: block;
+}
+
+.card.completed .card-status::before {
+  content: '✓';
+  font-size: 1rem;
+  color: var(--success);
+}
+.card.completed .card-summary {
+  display: flex;
+}
+
 /* Typography */
 h3 {
   font-weight: 600;

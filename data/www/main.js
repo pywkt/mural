@@ -151,8 +151,6 @@ async function checkIfExtendedToHome(extendToHomeTime) {
 
 function init() {
     async function doneWithPhase(custom) {
-        hideAll(".muralSlide");
-        show("loadingSlide");
         if (!custom) {
             custom = {
                 url: "/doneWithPhase",
@@ -873,8 +871,6 @@ function init() {
     document.querySelectorAll(".phaseBack").forEach(function(btn) {
         btn.addEventListener("click", async function() {
             const phase = this.dataset.phase;
-            hideAll(".muralSlide");
-            show("loadingSlide");
             try {
                 const state = await httpPost("/setPhase", {phase});
                 adaptToState(state);
@@ -901,8 +897,6 @@ function init() {
     }
 
     svgControl.initSvgControl();
-
-    show("loadingSlide");
 
     httpGet("/getState").then(function(data) {
         adaptToState(data);
@@ -949,19 +943,41 @@ async function verifyUpload(state) {
     }
 }
 
+const PHASE_ORDER = ["SetTopDistance", "SvgSelect", "RetractBelts", "ExtendToHome", "PenCalibration", "BeginDrawing"];
+const CARD_BY_PHASE = {
+    SetTopDistance: "distanceCard",
+    SvgSelect: "artworkCard",
+    RetractBelts: "retractCard",
+    ExtendToHome: "extendCard",
+    PenCalibration: "penCard",
+    BeginDrawing: "beginCard",
+};
+
+function setCardStates(currentPhase) {
+    const currentIdx = PHASE_ORDER.indexOf(currentPhase);
+    PHASE_ORDER.forEach(function(phase, idx) {
+        const card = document.getElementById(CARD_BY_PHASE[phase]);
+        if (!card) return;
+        card.classList.remove("locked", "active", "completed");
+        if (idx < currentIdx) card.classList.add("completed");
+        else if (idx === currentIdx) card.classList.add("active");
+        else card.classList.add("locked");
+    });
+}
+
+function updateSummaries(state) {
+    const dist = state.topDistance > 0 ? state.topDistance : state.savedTopDistance;
+    if (dist > 0) {
+        el("distanceSummary").textContent = `${dist}mm (${Math.round(dist * 0.6)}mm wide)`;
+    }
+}
+
 function adaptToState(state) {
-    hideAll(".muralSlide");
     currentState = state;
 
-    if (state.leftMotorInverted !== undefined) {
-        el("invertLeftMotor").checked = state.leftMotorInverted;
-    }
-    if (state.rightMotorInverted !== undefined) {
-        el("invertRightMotor").checked = state.rightMotorInverted;
-    }
-    if (state.servoInverted !== undefined) {
-        el("invertServo").checked = state.servoInverted;
-    }
+    if (state.leftMotorInverted !== undefined) el("invertLeftMotor").checked = state.leftMotorInverted;
+    if (state.rightMotorInverted !== undefined) el("invertRightMotor").checked = state.rightMotorInverted;
+    if (state.servoInverted !== undefined) el("invertServo").checked = state.servoInverted;
     if (state.penLiftAmount !== undefined) {
         el("penLiftAmount").value = state.penLiftAmount;
         el("penLiftValue").textContent = state.penLiftAmount;
@@ -971,9 +987,11 @@ function adaptToState(state) {
         el("servoDelayMain").value = state.servoDelay;
     }
 
+    setCardStates(state.phase);
+    updateSummaries(state);
+
     switch(state.phase) {
         case "RetractBelts":
-            show("retractBeltsSlide");
             break;
         case "SetTopDistance":
             if (state.topDistance > 0) {
@@ -986,10 +1004,8 @@ function adaptToState(state) {
             if (state.savedTopDistance > 0) {
                 show("quickStartSection");
             }
-            show("distanceBetweenAnchorsSlide");
             break;
         case "ExtendToHome":
-            show("extendToHomeSlide");
             if (state.moving || state.startedHoming) {
                 el("extendToHome").disabled = true;
                 el("extendingSpinner").style.visibility = 'visible';
@@ -1004,9 +1020,9 @@ function adaptToState(state) {
                 httpPost("/setServo", {angle: 90});
                 el("servoRange").value = 0;
             }
-            show("penCalibrationSlide");
             break;
         case "SvgSelect":
+            hideAll(".muralSlide");
             show("svgUploadSlide");
             break;
         case "BeginDrawing":
@@ -1015,6 +1031,7 @@ function adaptToState(state) {
                 el("drawSpeedValue").textContent = state.drawSpeed;
             }
             updateTimeEstimate();
+            hideAll(".muralSlide");
             show("beginDrawingSlide");
             break;
         default:
