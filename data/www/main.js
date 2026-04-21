@@ -235,6 +235,16 @@ function init() {
         } catch {}
     });
 
+    el("skipExtend").addEventListener("click", async function() {
+        try {
+            const state = await httpPost("/setPhase", {phase: "PenCalibration"});
+            adaptToState(state);
+        } catch {
+            alert("Failed to continue");
+            location.reload();
+        }
+    });
+
     function getServoValueFromInputValue() {
         const inputValue = parseInt(el("servoRange").value);
         const value = 90 - inputValue;
@@ -953,8 +963,11 @@ const CARD_BY_PHASE = {
     BeginDrawing: "beginCard",
 };
 
+let maxPhaseIdx = -1;
+
 function setCardStates(currentPhase) {
     const currentIdx = PHASE_ORDER.indexOf(currentPhase);
+    if (currentIdx > maxPhaseIdx) maxPhaseIdx = currentIdx;
     PHASE_ORDER.forEach(function(phase, idx) {
         const card = document.getElementById(CARD_BY_PHASE[phase]);
         if (!card) return;
@@ -1009,6 +1022,8 @@ function adaptToState(state) {
             const isHoming = state.moving || state.startedHoming;
             el("extendToHome").disabled = isHoming;
             el("extendingSpinner").style.visibility = isHoming ? 'visible' : 'hidden';
+            const extendIdx = PHASE_ORDER.indexOf("ExtendToHome");
+            el("skipExtend").style.display = (maxPhaseIdx > extendIdx && !isHoming) ? "" : "none";
             if (isHoming) checkIfExtendedToHome();
             break;
         }
