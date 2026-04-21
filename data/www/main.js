@@ -1005,13 +1005,13 @@ function adaptToState(state) {
                 show("quickStartSection");
             }
             break;
-        case "ExtendToHome":
-            if (state.moving || state.startedHoming) {
-                el("extendToHome").disabled = true;
-                el("extendingSpinner").style.visibility = 'visible';
-                checkIfExtendedToHome();
-            }
+        case "ExtendToHome": {
+            const isHoming = state.moving || state.startedHoming;
+            el("extendToHome").disabled = isHoming;
+            el("extendingSpinner").style.visibility = isHoming ? 'visible' : 'hidden';
+            if (isHoming) checkIfExtendedToHome();
             break;
+        }
         case "PenCalibration":
             if (state.servoInverted) {
                 httpPost("/setServo", {angle: 0});
