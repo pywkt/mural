@@ -2,53 +2,45 @@
 
 This is a fork of [Mural](https://github.com/nikivanov/mural), an ESP32-based wall plotter. For the original documentation and hardware setup, visit [getmural.me](https://getmural.me).
 
+This fork has diverged in two ways from upstream:
+
+1. The firmware is strictly for **controlling the plotter** — it no longer does SVG processing on-device. The multi-step wizard was replaced with a single-page dashboard, and a lot of quality-of-life features were added.
+2. SVG → `.mural` conversion lives in a separate offsite tool: [svg-to-mural](https://pywkt.github.io/mural/svg-to-mural/). It runs entirely in the browser, outputs a file you upload to the plotter.
+
 ## What's Changed
 
-This fork adds a number of web UI improvements and quality-of-life features to the original Mural firmware.
+### Single-page dashboard UI
 
-### Web UI Overhaul
+The web UI has been rewritten as a single-page card dashboard — one card per phase (Distance, Artwork, Retract, Extend, Pen Calibration, Begin) with locked / active / completed states. Catppuccin Latte/Mocha color scheme with automatic light/dark mode via `prefers-color-scheme`. Fully offline (no CDN dependencies).
 
-The web UI has been rewritten to work **fully offline** with zero CDN dependencies. Bootstrap, jQuery, jquery-throttle-debounce, the LESS compiler, and Bootstrap Icons have all been replaced with vanilla HTML, CSS, and JavaScript. The paper.js library is now served locally from the ESP32's flash storage.
+### Gzip compression
 
-### Gzip Compression
+Static web assets are gzipped at build time; uploaded command files are gzipped in the browser (via `CompressionStream`) and stream-decompressed on the ESP32 at drawing time using the ROM-resident `tinfl_decompress` (no library dependency). Typical command files compress by ~70%.
 
-Static web assets are gzipped at build time; uploaded command files are gzipped in the browser (via `CompressionStream`) and stream-decompressed on the ESP32 at drawing time using the ROM-resident `tinfl_decompress` (no library dependency). Shrinks the web UI from ~370 KB to ~110 KB on LittleFS and typical command files by ~70%, freeing meaningful headroom for larger drawings.
+### New features
 
-### New Features
-
-- **Quick Start** — Skip the full setup flow and resume drawing immediately if the plotter is still at its home position. The top distance and pen calibration are cached in NVS.
+- **Quick Start** — Skip the full setup and resume immediately if the plotter is still at its home position. Top distance and pen calibration are cached in NVS.
 - **Drawing completion detection** — The UI polls the ESP32 and notifies you when a drawing finishes.
-- **Paper size selection** — Choose from standard paper sizes (Letter, A4, A3 in portrait/landscape) or enter custom dimensions. The SVG is scaled to fit within the selected paper and centered on the home position.
-- **Margins** — Configurable X/Y margins (in mm) that inset the drawing area for both SVG and raw command uploads.
-- **Raw command upload** — Upload pre-generated `.txt` or `.mural` command files directly, bypassing SVG processing. An optional "Center drawing on paper" checkbox applies the current paper size and margin settings. Uses a raw body upload to avoid ESP32 heap exhaustion on large files.
-- **G-code support** — Upload `.gcode`, `.nc`, or `.ngc` files. The firmware auto-detects the format and parses G0/G1 (movement) and M3/M5 (pen control) commands. Unsupported codes are silently ignored. Progress tracking works via a first-pass distance calculation.
-- **Draw speed control** — Adjustable draw speed slider on the Begin Drawing screen (100–1500 steps/s). Resets to the default 500 steps/s with a button.
-- **Estimated draw time** — Shows a rough time estimate on the Begin Drawing screen based on pen-up/pen-down distances, pen transitions, draw speed, and servo delay. Updates live when settings change.
-- **Infill patterns** — Choose from horizontal, vertical, diagonal, crosshatch, or concentric infill patterns with adjustable spacing, replacing the old 5-step density slider.
-- **Back buttons** — Navigate backwards through all setup steps.
+- **Paper size selection** — Choose from Letter, A4, A3 (portrait/landscape) or enter custom dimensions. Used to center `.mural` uploads on the chosen paper.
+- **Margins** — Configurable X/Y margins applied during centering.
+- **G-code support** — Upload `.gcode`, `.nc`, or `.ngc` files alongside `.mural`. The firmware auto-detects the format and parses `G0`/`G1` (movement) and `M3`/`M5` (pen control) commands.
+- **Draw speed control** — Adjustable draw speed (100–1500 steps/s) on the Begin Drawing card, with a reset button.
+- **Estimated draw time** — Rough time estimate based on pen-up/pen-down distances, pen transitions, draw speed, and servo delay. Updates live when settings change.
+- **Edit / revisit any completed step** — Collapsed cards show an Edit button that rewinds the phase. Revisiting a phase that does physical work (Extend, Artwork) offers a skip-continue so you don't re-run motion unnecessarily.
 
-### Tools Modal
+### Tools modal
 
-A gear icon on the setup page opens a tools modal with:
+A gear icon in the page header opens a tools modal with:
 
-- **Servo controls** — Range slider with fine-adjustment buttons and a Park Servo button.
-- **Motor inversion toggles** — Invert left/right motor direction, persisted in NVS.
-- **Servo inversion toggle** — Invert the servo direction, persisted in NVS. Pen calibration and lift behavior adapt automatically.
-- **Pen lift adjustment** — Configurable pen lift amount (in degrees), persisted in NVS.
-- **Servo settle delay** — Adjustable delay (0–1000ms) after pen movements, persisted in NVS. Reduce to eliminate ink dots at line starts from high-flow pens. Available in both the tools modal and the Begin Drawing screen.
-- **E-steps calibration** — Extend belts 1000mm for calibration.
+- **Manual controls** — Motor sliders (left/right), servo slider with fine-adjustment buttons, Park Servo, E-steps calibration.
+- **Inversions** — Invert left/right motor and servo direction (NVS-persisted).
+- **Pen behavior** — Pen lift degrees and servo settle delay (NVS-persisted).
+
+An info icon next to it opens a separate Debug modal with uptime, free heap, Wi-Fi, and filesystem stats.
 
 ## Building
 
-This is a [PlatformIO](https://platformio.org/) project. The web worker (SVG processing) is built from TypeScript:
-
-```
-cd tsc
-npm install
-npm run build
-```
-
-PlatformIO's `build.py` script handles this automatically and copies the built worker and paper.js library to `data/www/`.
+This is a [PlatformIO](https://platformio.org/) project. All the web UI assets are vanilla HTML/CSS/JS — no worker build step.
 
 To flash the firmware and upload the filesystem:
 
@@ -56,6 +48,21 @@ To flash the firmware and upload the filesystem:
 pio run -t upload
 pio run -t uploadfs
 ```
+
+To iterate on the web UI locally without flashing, run the dev mock server:
+
+```
+python3 dev.py
+```
+
+It serves `data/www/` and stubs the ESP32 HTTP API so you can walk through the full flow in a browser.
+
+## Converting SVGs
+
+The plotter only accepts pre-generated command files. To convert an SVG:
+
+- Use the **[svg-to-mural](https://pywkt.github.io/mural/svg-to-mural/)** tool (hosted on GitHub Pages, runs entirely in the browser). Upload an SVG, pick paper size / infill / renderer options, download a `.mural` file.
+- Or use any other source that emits the Mural command format (see [PLOTTER_COMMAND_FORMAT.md](PLOTTER_COMMAND_FORMAT.md)) or G-code.
 
 ## Command Format
 
@@ -68,15 +75,13 @@ The plotter accepts two command formats:
 
 ### Positioning of the Drawing on the Wall
 
-- The user defines the pin distance as part of the setup in the UI. For example 1 meter (or 1000mm). (This is d_pins in the image below.)
-- The top margin is 20% of that distance, so the top of the image will be 200mm below the line between the two pins.
-- Each side also has a 20% margin, so you'll get total of 60% of the horizontal distance, or 600mm.
-- Now that we have the max width (600mm), the SVG is resized so its width is 600 and the height gets resized proportionally.
-- Then a processing step is performed on the SVG to figure out what to actually draw, with each SVG unit being treated as millimeter.
-- Finally it's converted into a simple format for Mural to draw, containing mostly its coordinate movement commands and pen up/down. This file is then uploaded to the microcontroller and executed line by line.
+- The user defines the pin distance as part of the setup in the UI (e.g. 1000mm, i.e. d_pins in the image below).
+- The top margin is 20% of that distance, so the top of the drawing area is 200mm below the line between the two pins.
+- Each side has a 20% margin, giving a total drawing width of 60% of the pin distance (600mm for 1000mm pins).
+- The plotter executes `.mural` or G-code commands line by line, in that coordinate space.
 
 ![image_positioning](/images/doc/muralbot_image_positioning.svg)
 
 ### Mural's Kinematic Model
 
-Please find the kinematic model [here](KinematicModel.md).
+See [KinematicModel.md](KinematicModel.md).

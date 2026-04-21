@@ -5,12 +5,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mural</title>
-  <link href="dpad.css" rel="stylesheet">
   <link href="main.css" rel="stylesheet">
 </head>
 
 <body>
-  <script src="lib/paper-full.min.js"></script>
   <script src="main.js" type="module"></script>
 
   <header class="app-header">
@@ -64,7 +62,7 @@
           <button class="btn btn-sm btn-secondary phaseBack" data-phase="SvgSelect">Edit</button>
         </div>
         <div class="card-body">
-          <div class="muralSlide" id="svgUploadSlide">
+          <div class="muralSlide" id="commandsUploadSlide">
             <button class="btn btn-lg btn-primary mb-3" id="continueArtwork" style="display:none;">Continue with current upload</button>
             <label for="paperSize">Paper Size</label>
             <select class="mb-2" id="paperSize">
@@ -85,7 +83,7 @@
                 <input type="number" id="customPaperHeight" placeholder="Height (mm)">
               </div>
             </div>
-            <div class="row mb-2">
+            <div class="row mb-3">
               <div class="col">
                 <label for="marginX">Margin X (mm)</label>
                 <input type="number" id="marginX" value="0" min="0">
@@ -95,88 +93,19 @@
                 <input type="number" id="marginY" value="0" min="0">
               </div>
             </div>
-            <h6 class="mb-3"><small class="text-muted" id="paperSizeInfo"></small></h6>
 
-            <div class="tab-bar mb-3" role="tablist">
-              <button type="button" class="tab-btn active" data-tab="svg" role="tab">SVG</button>
-              <button type="button" class="tab-btn" data-tab="raw" role="tab">Command file</button>
+            <label for="uploadRawCommands">Command file</label>
+            <input type="file" class="mb-2" id="uploadRawCommands" accept=".txt,.mural,.gcode,.nc,.ngc">
+            <div class="checkbox-row mb-3">
+              <input type="checkbox" id="centerRawCommands" checked>
+              <label for="centerRawCommands">Center drawing on paper</label>
             </div>
+            <small class="text-muted" style="display:block;">Accepts <code>.mural</code>, <code>.gcode</code>, <code>.nc</code>, <code>.ngc</code>.</small>
 
-            <div class="tab-panel" id="svgTab" role="tabpanel">
-              <h6 class="mb-2"><small class="text-muted">Use black and white line art SVGs</small></h6>
-              <img id="sourceSvg" class="img-thumbnail mb-2 svg-control" style="display:none;">
-              <div class="svg-control mb-2" style="display: none;">
-                <div class="svg-controls-row">
-                  <div class="dpad-col">
-                    <div class="set">
-                      <nav class="d-pad">
-                        <a class="up" href="#"></a>
-                        <a class="right" href="#"></a>
-                        <a class="down" href="#"></a>
-                        <a class="left" href="#"></a>
-                      </nav>
-                    </div>
-                  </div>
-                  <div class="zoom-col">
-                    <button type="button" class="btn btn-primary btn-icon" id="zoomIn">
-                      <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor"><path d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/><path d="M10.344 11.742c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1 6.538 6.538 0 0 1-1.398 1.4z"/><path d="M6.5 3a.5.5 0 0 1 .5.5V6h2.5a.5.5 0 0 1 0 1H7v2.5a.5.5 0 0 1-1 0V7H3.5a.5.5 0 0 1 0-1H6V3.5a.5.5 0 0 1 .5-.5z"/></svg>
-                    </button>
-                    <button type="button" class="btn btn-primary btn-icon" id="zoomOut">
-                      <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor"><path d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11zM13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0z"/><path d="M10.344 11.742c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1 6.538 6.538 0 0 1-1.398 1.4z"/><path d="M3.5 6a.5.5 0 0 0 0 1h6a.5.5 0 0 0 0-1h-6z"/></svg>
-                    </button>
-                    <button type="button" class="btn btn-primary btn-icon" id="resetTransform">
-                      <svg width="24" height="24" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z"/></svg>
-                    </button>
-                  </div>
-                </div>
-                <h6><small class="text-muted" id="transformText"></small></h6>
-              </div>
-              <input type="file" class="mb-2" id="uploadSvg" accept=".svg">
-              <button class="btn btn-lg btn-primary" id="preview" disabled>Preview drawing</button>
+            <div class="tool-link">
+              Need to convert an SVG?
+              <a href="https://pywkt.github.io/mural/svg-to-mural/" target="_blank" rel="noopener">Generate a .mural file &rarr;</a>
             </div>
-
-            <div class="tab-panel" id="rawTab" role="tabpanel" style="display:none;">
-              <h6 class="mb-2"><small class="text-muted">Upload a pre-generated command file (.mural, .gcode, .nc, .ngc)</small></h6>
-              <input type="file" class="mb-2" id="uploadRawCommands" accept=".txt,.mural,.gcode,.nc,.ngc">
-              <div class="checkbox-row mb-2">
-                <input type="checkbox" id="centerRawCommands" checked>
-                <label for="centerRawCommands">Center drawing on paper</label>
-              </div>
-            </div>
-          </div>
-          <div class="muralSlide" id="chooseRendererSlide" style="display:none;">
-            <h6 class="mb-3"><small class="text-muted">Choose render type</small></h6>
-            <button class="btn btn-lg btn-primary mb-3" id="pathTracing">Path Tracing<br/><sub>Works well for most drawings</sub></button>
-            <button class="btn btn-lg btn-primary mb-3" id="vectorRasterVector">Vector &rarr; Raster &rarr; Vector<br/><sub>Preserves stroke width</sub></button>
-            <button class="btn btn-lg btn-secondary backToSvgSelect">Back</button>
-          </div>
-          <div class="muralSlide" id="drawingPreviewSlide" style="display:none;">
-            <h6 class="mb-2"><small class="text-muted">Drawing preview</small></h6>
-            <img id="previewSvg" class="img-thumbnail mb-2 svg-preview" style="display:none;">
-            <div class="progress mb-2">
-              <div class="progress-bar progress-bar-striped progress-bar-animated" id="progressBar" style="width: 100%;"></div>
-            </div>
-            <h6 class="mb-2 svg-preview" style="display: none;" id="distances"></h6>
-            <label for="infillPattern">Infill Pattern</label>
-            <select class="mb-2" id="infillPattern">
-              <option value="none" selected>None</option>
-              <option value="horizontal">Horizontal</option>
-              <option value="vertical">Vertical</option>
-              <option value="diagonal45">Diagonal &#x2197;</option>
-              <option value="diagonal135">Diagonal &#x2198;</option>
-              <option value="crosshatch">Crosshatch</option>
-              <option value="concentric">Concentric</option>
-            </select>
-            <label for="infillSpacing" class="infillSpacingControl" style="display:none;">Spacing (<span id="infillSpacingValue">10</span>mm)</label>
-            <input type="range" class="mb-2 infillSpacingControl" style="display:none;" min="2" max="30" step="1" id="infillSpacing" value="10">
-            <label for="turdSize" id="turdSizeLabel">Despeckle</label>
-            <input type="range" class="mb-2" min="2" max="200" step="11" id="turdSize" value="2">
-            <div class="checkbox-row mb-2">
-              <input type="checkbox" id="flattenPathsCheckbox">
-              <label for="flattenPathsCheckbox" id="flattenPathsLabel">Flatten paths</label>
-            </div>
-            <button class="btn btn-lg btn-primary mb-2" id="acceptSvg" disabled>Accept</button>
-            <button class="btn btn-lg btn-secondary backToSvgSelect">Back</button>
           </div>
           <div class="muralSlide" id="uploadProgressSlide" style="display:none;">
             <h6 class="mb-2">Uploading...</h6>

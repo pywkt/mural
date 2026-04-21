@@ -10,31 +10,13 @@ Usage:  python3 dev.py [PORT]   (default port 8000)
 """
 import json
 import os
-import shutil
 import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 WWW_DIR = os.path.join(PROJECT_DIR, "data", "www")
-PAPER_SRC = os.path.join(PROJECT_DIR, "tsc", "node_modules", "paper", "dist", "paper-full.min.js")
-PAPER_DST = os.path.join(WWW_DIR, "lib", "paper-full.min.js")
 DEFAULT_PORT = 8000
-
-
-def stage_paper_js():
-    """Copy paper.js into data/www/lib/ so the dev server can serve it.
-    The real build pipeline does this via build.py; for dev mode we do it once at startup."""
-    if os.path.exists(PAPER_DST):
-        return
-    if not os.path.exists(PAPER_SRC):
-        sys.stderr.write(
-            "[dev] warning: {} not found — run 'npm install' in tsc/ first.\n".format(PAPER_SRC)
-        )
-        return
-    os.makedirs(os.path.dirname(PAPER_DST), exist_ok=True)
-    shutil.copy(PAPER_SRC, PAPER_DST)
-    sys.stderr.write("[dev] staged paper-full.min.js into data/www/lib/\n")
 
 state = {
     "phase": "SetTopDistance",
@@ -235,7 +217,6 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     port = int(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_PORT
-    stage_paper_js()
     server = HTTPServer(("", port), Handler)
     print("Mural dev server listening on http://localhost:{}/".format(port))
     print("Serving {}/".format(WWW_DIR))

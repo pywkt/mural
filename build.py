@@ -16,19 +16,6 @@ os.makedirs(staging_www)
 print("Copying data/www -> " + staging_www)
 shutil.copytree(os.path.join(project_dir, "data", "www"), staging_www, dirs_exist_ok=True)
 
-print("Transpiling TS code")
-tsc_dir = os.path.join(project_dir, "tsc")
-os.chdir(tsc_dir)
-env.Execute("npm run build")
-os.chdir(project_dir)
-
-worker_dest = os.path.join(staging_www, "worker")
-lib_dest = os.path.join(staging_www, "lib")
-os.makedirs(worker_dest, exist_ok=True)
-os.makedirs(lib_dest, exist_ok=True)
-shutil.copy(os.path.join(tsc_dir, "dist_packed", "main.js"), os.path.join(worker_dest, "worker.js"))
-shutil.copy(os.path.join(tsc_dir, "node_modules", "paper", "dist", "paper-full.min.js"), os.path.join(lib_dest, "paper-full.min.js"))
-
 print("Gzipping static assets in " + staging_www)
 total_orig = 0
 total_gz = 0
