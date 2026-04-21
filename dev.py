@@ -10,12 +10,31 @@ Usage:  python3 dev.py [PORT]   (default port 8000)
 """
 import json
 import os
+import shutil
 import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 
-WWW_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "www")
+PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+WWW_DIR = os.path.join(PROJECT_DIR, "data", "www")
+PAPER_SRC = os.path.join(PROJECT_DIR, "tsc", "node_modules", "paper", "dist", "paper-full.min.js")
+PAPER_DST = os.path.join(WWW_DIR, "lib", "paper-full.min.js")
 DEFAULT_PORT = 8000
+
+
+def stage_paper_js():
+    """Copy paper.js into data/www/lib/ so the dev server can serve it.
+    The real build pipeline does this via build.py; for dev mode we do it once at startup."""
+    if os.path.exists(PAPER_DST):
+        return
+    if not os.path.exists(PAPER_SRC):
+        sys.stderr.write(
+            "[dev] warning: {} not found — run 'npm install' in tsc/ first.\n".format(PAPER_SRC)
+        )
+        return
+    os.makedirs(os.path.dirname(PAPER_DST), exist_ok=True)
+    shutil.copy(PAPER_SRC, PAPER_DST)
+    sys.stderr.write("[dev] staged paper-full.min.js into data/www/lib/\n")
 
 state = {
     "phase": "SetTopDistance",
@@ -147,7 +166,14 @@ class Handler(BaseHTTPRequestHandler):
         params = parse_form(body)
 
         if path == "/setTopDistance":
-            set_top_distance(float(params.get("topDistance", 0)))
+            set_top_distance(float(params.get("distance", 0)))
+            set_phase("SvgSelect")
+            self._send_state()
+        elif path == "/resume":
+            set_top_distance(float(params.get("distance", 0)))
+            if state["savedPenDistance"] <= 0:
+                state["savedPenDistance"] = 45
+            set_phase("SvgSelect")
             self._send_state()
         elif path == "/setPhase":
             p = params.get("phase", "")
@@ -160,15 +186,19 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/extendToHome":
             homed = True
             set_phase("PenCalibration")
-            self._send_state()
+            # Real firmware returns the move time in seconds as plain text.
+            self._send("1", content_type="text/plain")
         elif path == "/setServo":
-            self._send_state()
+            self._send("OK", content_type="text/plain")
         elif path == "/setPenDistance":
-            state["savedPenDistance"] = float(params.get("penDistance", 0))
+            state["savedPenDistance"] = int(float(params.get("angle", 0)))
+            set_phase("BeginDrawing")
             self._send_state()
         elif path == "/estepsCalibration":
-            self._send_state()
+            self._send("OK", content_type="text/plain")
         elif path == "/doneWithPhase":
+            if state["phase"] == "RetractBelts":
+                set_phase("ExtendToHome")
             self._send_state()
         elif path == "/command":
             self._send_state()
@@ -205,6 +235,7 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     port = int(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_PORT
+    stage_paper_js()
     server = HTTPServer(("", port), Handler)
     print("Mural dev server listening on http://localhost:{}/".format(port))
     print("Serving {}/".format(WWW_DIR))
