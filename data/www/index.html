@@ -16,9 +16,14 @@
   <header class="app-header">
     <div class="app-header-inner">
       <h1 class="app-title">Mural</h1>
-      <button class="tools-btn" id="openToolsModal" type="button" aria-label="Tools">
-        <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/></svg>
-      </button>
+      <div class="header-actions">
+        <button class="tools-btn" id="openDebugModal" type="button" aria-label="Debug info">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+        </button>
+        <button class="tools-btn" id="openToolsModal" type="button" aria-label="Tools">
+          <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z"/><path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z"/></svg>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -290,48 +295,85 @@
         <button type="button" class="btn-close" id="closeToolsModal">&times;</button>
       </div>
       <div class="modal-body">
-        <label for="leftMotorTool">Left Motor</label>
-        <input type="range" class="mb-3" min="-1" max="1" id="leftMotorTool" value="0">
-        <label for="rightMotorTool">Right Motor</label>
-        <input type="range" class="mb-3" min="-1" max="1" id="rightMotorTool" value="0">
-        <label for="servoRangeTool">Servo</label>
-        <input type="range" class="mb-2" min="0" max="90" id="servoRangeTool" value="0">
-        <div class="btn-group mb-3">
-          <button type="button" class="btn btn-primary btn-sm" id="servoMinusTool">&minus;</button>
-          <button type="button" class="btn btn-primary btn-sm" id="servoPlusTool">+</button>
-        </div>
-        <button class="btn btn-lg btn-primary mb-3" id="parkServoTool">Park Servo</button>
-        <button class="btn btn-lg btn-primary mb-3" id="estepsTool">Extend 1000mm (E-steps calibration)</button>
-        <div class="toggle-switch mb-3">
-          <input type="checkbox" id="invertLeftMotor">
-          <label for="invertLeftMotor">Invert Left Motor</label>
-        </div>
-        <div class="toggle-switch mb-3">
-          <input type="checkbox" id="invertRightMotor">
-          <label for="invertRightMotor">Invert Right Motor</label>
-        </div>
-        <div class="toggle-switch mb-3">
-          <input type="checkbox" id="invertServo">
-          <label for="invertServo">Invert Servo</label>
-        </div>
-        <label for="penLiftAmount">Pen Lift (<span id="penLiftValue">20</span>&deg;)</label>
-        <input type="range" class="mb-3" min="5" max="90" step="5" id="penLiftAmount" value="20">
-        <label for="servoDelay">Servo Settle Delay (ms)</label>
-        <div class="input-with-reset mb-2">
-          <input type="number" id="servoDelay" value="200" min="0" max="1000" step="10" style="width:80px;">
-          <button class="btn btn-sm btn-secondary" id="resetServoDelay">Reset</button>
-        </div>
-        <small class="text-muted mb-3" style="display:block;">Wait time after pen moves. Reduce if ink dots appear at line starts.</small>
-        <button class="btn btn-lg btn-secondary mb-2" id="debugInfoBtn">Debug Info</button>
-        <div id="debugInfoPanel" style="display:none;" class="debug-panel mb-3">
-          <div id="debugInfoContent"></div>
-        </div>
+        <section class="settings-section">
+          <h6 class="settings-section-title">Manual controls</h6>
+          <div class="settings-grid-2">
+            <div>
+              <label for="leftMotorTool">Left Motor</label>
+              <input type="range" min="-1" max="1" id="leftMotorTool" value="0">
+            </div>
+            <div>
+              <label for="rightMotorTool">Right Motor</label>
+              <input type="range" min="-1" max="1" id="rightMotorTool" value="0">
+            </div>
+          </div>
+          <label for="servoRangeTool">Servo</label>
+          <input type="range" class="mb-2" min="0" max="90" id="servoRangeTool" value="0">
+          <div class="btn-group mb-3">
+            <button type="button" class="btn btn-primary btn-sm" id="servoMinusTool">&minus;</button>
+            <button type="button" class="btn btn-primary btn-sm" id="servoPlusTool">+</button>
+          </div>
+          <div class="settings-grid-2">
+            <button class="btn btn-primary" id="parkServoTool">Park Servo</button>
+            <button class="btn btn-primary" id="estepsTool">Extend 1000mm</button>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <h6 class="settings-section-title">Inversions</h6>
+          <div class="toggle-switch mb-3">
+            <input type="checkbox" id="invertLeftMotor">
+            <label for="invertLeftMotor">Invert Left Motor</label>
+          </div>
+          <div class="toggle-switch mb-3">
+            <input type="checkbox" id="invertRightMotor">
+            <label for="invertRightMotor">Invert Right Motor</label>
+          </div>
+          <div class="toggle-switch">
+            <input type="checkbox" id="invertServo">
+            <label for="invertServo">Invert Servo</label>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <h6 class="settings-section-title">Pen behavior</h6>
+          <div class="settings-grid-2">
+            <div>
+              <label for="penLiftAmount">Pen Lift (<span id="penLiftValue">20</span>&deg;)</label>
+              <input type="range" min="5" max="90" step="5" id="penLiftAmount" value="20">
+            </div>
+            <div>
+              <label for="servoDelay">Servo Delay (ms)</label>
+              <div class="input-with-reset">
+                <input type="number" id="servoDelay" value="200" min="0" max="1000" step="10" style="width:80px;">
+                <button class="btn btn-sm btn-secondary" id="resetServoDelay">Reset</button>
+              </div>
+            </div>
+          </div>
+          <small class="text-muted" style="display:block;">Servo delay: wait time after pen moves. Reduce if ink dots appear at line starts.</small>
+        </section>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" id="closeToolsModalFooter" onclick="document.getElementById('closeToolsModal').click()">Close</button>
       </div>
     </div>
   </div>
+
+  <div class="modal" id="debugModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5>Debug Info</h5>
+        <button type="button" class="btn-close" id="closeDebugModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="debugInfoContent" class="debug-panel">Loading...</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" id="closeDebugModalFooter">Close</button>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="toolsModalBackdrop"></div>
 
 </body>

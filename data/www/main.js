@@ -862,18 +862,9 @@ function init() {
         updateServoDelay(200);
     });
 
-    el("debugInfoBtn").addEventListener("click", async function() {
-        const panel = el("debugInfoPanel");
+    async function loadDebugInfo() {
         const content = el("debugInfoContent");
-
-        if (panel.style.display !== 'none') {
-            panel.style.display = 'none';
-            return;
-        }
-
         content.textContent = 'Loading...';
-        panel.style.display = '';
-
         try {
             const info = await httpGet("/debug");
             const uptime = info.uptimeSeconds;
@@ -895,7 +886,18 @@ function init() {
         } catch (err) {
             content.textContent = 'Failed to load debug info: ' + err;
         }
+    }
+
+    function closeDebugModal() {
+        el("debugModal").classList.remove("open");
+    }
+
+    el("openDebugModal").addEventListener("click", function() {
+        el("debugModal").classList.add("open");
+        loadDebugInfo();
     });
+    el("closeDebugModal").addEventListener("click", closeDebugModal);
+    el("closeDebugModalFooter").addEventListener("click", closeDebugModal);
 
     document.querySelectorAll(".tab-btn").forEach(function(btn) {
         btn.addEventListener("click", function() {
@@ -927,7 +929,10 @@ function init() {
 
     el("closeToolsModal").addEventListener("click", closeToolsModal);
 
-    el("toolsModalBackdrop").addEventListener("click", closeToolsModal);
+    el("toolsModalBackdrop").addEventListener("click", function() {
+        if (el("toolsModal").classList.contains("open")) closeToolsModal();
+        if (el("debugModal").classList.contains("open")) closeDebugModal();
+    });
 
     function closeToolsModal() {
         el("toolsModal").classList.remove("open");
