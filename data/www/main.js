@@ -878,6 +878,16 @@ function init() {
         }
     });
 
+    document.querySelectorAll(".tab-btn").forEach(function(btn) {
+        btn.addEventListener("click", function() {
+            const target = this.dataset.tab;
+            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+            this.classList.add("active");
+            document.querySelectorAll(".tab-panel").forEach(p => p.style.display = "none");
+            el(target + "Tab").style.display = "";
+        });
+    });
+
     document.querySelectorAll(".phaseBack").forEach(function(btn) {
         btn.addEventListener("click", async function() {
             const phase = this.dataset.phase;
