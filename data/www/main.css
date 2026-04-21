@@ -1,48 +1,55 @@
-/* Design tokens */
+/* Design tokens — Catppuccin Latte (light) / Mocha (dark), mauve primary */
 :root {
-  --bg: hsl(0 0% 100%);
-  --fg: hsl(240 10% 10%);
-  --muted: hsl(240 5% 96%);
-  --muted-fg: hsl(240 4% 46%);
-  --border: hsl(240 6% 90%);
-  --input: hsl(240 6% 90%);
-  --ring: hsl(240 5% 65%);
-  --card: hsl(0 0% 100%);
-  --primary: hsl(240 6% 10%);
-  --primary-fg: hsl(0 0% 98%);
-  --primary-hover: hsl(240 6% 20%);
-  --secondary: hsl(240 5% 96%);
-  --secondary-fg: hsl(240 6% 10%);
-  --secondary-hover: hsl(240 5% 90%);
-  --accent: hsl(217 91% 60%);
-  --warning: hsl(38 92% 50%);
-  --warning-fg: hsl(48 96% 10%);
-  --success: hsl(142 71% 45%);
-  --destructive: hsl(0 72% 51%);
+  --bg: #eff1f5;             /* latte base */
+  --fg: #4c4f69;             /* latte text */
+  --muted: #e6e9ef;          /* latte mantle */
+  --muted-fg: #6c6f85;       /* latte subtext0 */
+  --border: #bcc0cc;         /* latte surface1 */
+  --input: #bcc0cc;
+  --ring: #8839ef;           /* latte mauve */
+  --ring-glow: rgba(136, 57, 239, 0.18);
+  --card: #eff1f5;
+  --primary: #8839ef;        /* latte mauve */
+  --primary-fg: #eff1f5;
+  --primary-hover: #7215e3;
+  --secondary: #ccd0da;      /* latte surface0 */
+  --secondary-fg: #4c4f69;
+  --secondary-hover: #bcc0cc;
+  --accent: #8839ef;
+  --warning: #df8e1d;        /* latte yellow */
+  --warning-fg: #eff1f5;
+  --success: #40a02b;        /* latte green */
+  --destructive: #d20f39;    /* latte red */
   --radius: 0.5rem;
-  --shadow-sm: 0 1px 2px hsl(240 6% 10% / 0.05);
-  --shadow: 0 4px 12px hsl(240 6% 10% / 0.08), 0 2px 4px hsl(240 6% 10% / 0.04);
+  --shadow-sm: 0 1px 2px rgba(76, 79, 105, 0.08);
+  --shadow: 0 4px 12px rgba(76, 79, 105, 0.12), 0 2px 4px rgba(76, 79, 105, 0.06);
   color-scheme: light dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: hsl(240 10% 4%);
-    --fg: hsl(0 0% 98%);
-    --muted: hsl(240 4% 16%);
-    --muted-fg: hsl(240 5% 65%);
-    --border: hsl(240 4% 16%);
-    --input: hsl(240 4% 16%);
-    --ring: hsl(240 5% 65%);
-    --card: hsl(240 10% 4%);
-    --primary: hsl(0 0% 98%);
-    --primary-fg: hsl(240 6% 10%);
-    --primary-hover: hsl(0 0% 88%);
-    --secondary: hsl(240 4% 16%);
-    --secondary-fg: hsl(0 0% 98%);
-    --secondary-hover: hsl(240 4% 22%);
-    --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.3);
-    --shadow: 0 4px 12px hsl(0 0% 0% / 0.4), 0 2px 4px hsl(0 0% 0% / 0.2);
+    --bg: #1e1e2e;           /* mocha base */
+    --fg: #cdd6f4;           /* mocha text */
+    --muted: #313244;        /* mocha surface0 */
+    --muted-fg: #a6adc8;     /* mocha subtext0 */
+    --border: #45475a;       /* mocha surface1 */
+    --input: #45475a;
+    --ring: #cba6f7;         /* mocha mauve */
+    --ring-glow: rgba(203, 166, 247, 0.22);
+    --card: #1e1e2e;
+    --primary: #cba6f7;      /* mocha mauve */
+    --primary-fg: #1e1e2e;
+    --primary-hover: #b48cef;
+    --secondary: #313244;
+    --secondary-fg: #cdd6f4;
+    --secondary-hover: #45475a;
+    --accent: #cba6f7;
+    --warning: #f9e2af;      /* mocha yellow */
+    --warning-fg: #1e1e2e;
+    --success: #a6e3a1;      /* mocha green */
+    --destructive: #f38ba8;  /* mocha red */
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
   }
 }
 
@@ -372,7 +379,7 @@ input[type="text"]:focus,
 select:focus {
   border-color: var(--ring);
   outline: 0;
-  box-shadow: 0 0 0 3px hsl(240 5% 65% / 0.2);
+  box-shadow: 0 0 0 3px var(--ring-glow);
 }
 
 input[type="file"] {
@@ -552,16 +559,16 @@ label {
 }
 
 .alert-warning {
-  background: hsl(38 92% 95%);
-  border-color: hsl(38 92% 85%);
-  color: hsl(38 92% 20%);
+  background: #fef6dd;
+  border-color: #f2d88a;
+  color: #a06412;
 }
 
 @media (prefers-color-scheme: dark) {
   .alert-warning {
-    background: hsl(38 60% 15%);
-    border-color: hsl(38 60% 25%);
-    color: hsl(38 92% 80%);
+    background: #302a1f;
+    border-color: #574a2a;
+    color: #f9e2af;
   }
 }
 
