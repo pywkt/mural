@@ -439,6 +439,11 @@ function init() {
             return;
         }
 
+        // Clear any pending SVG — only one source can win
+        el("uploadSvg").value = '';
+        el("preview").disabled = true;
+        document.querySelectorAll(".svg-control").forEach(e => e.style.display = 'none');
+
         // Centering only applies to mural format files
         if (!isGcode && el("centerRawCommands").checked && currentState) {
             text = centerRawCommands(text, currentState);
@@ -462,6 +467,9 @@ function init() {
     el("uploadSvg").addEventListener("change", async function() {
         const svgString = await getUploadedSvgString();
         if (svgString) {
+            // Clear any pending raw command file — only one source can win
+            el("uploadRawCommands").value = '';
+
             svgControl.setSvgString(svgString, currentState);
             updatePaperSizeInfo();
 
