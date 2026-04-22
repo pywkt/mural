@@ -1,0 +1,328 @@
+document.body.addEventListener("click", function(e) {
+	if(e.target && e.target.nodeName == "A" && e.target.parentElement.className == 'd-pad') {
+        const validDirection = ["up", "down", "left", "right"];
+        if (validDirection.includes(e.target.className)) {
+            requestChangeInTransform(e.target.className);
+        }
+	}
+});
+
+export const renderScale = 2;
+
+export function initSvgControl() {
+    document.getElementById("zoomIn").addEventListener("click", function() {
+        requestChangeInTransform("in");
+    });
+
+    document.getElementById("zoomOut").addEventListener("click", function() {
+        requestChangeInTransform("out");
+    });
+
+    document.getElementById("resetTransform").addEventListener("click", function() {
+        requestChangeInTransform("reset");
+    });
+}
+
+const affineTransform = [1, 0, 0, 1, 0, 0];
+// nudge by this fraction of the viewport's width and height
+const nudgeByFactor = 0.025;
+const zoomByFactor = 0.05;
+function requestChangeInTransform(direction) {
+    switch (direction) {
+        case "up":
+            affineTransform[5] = affineTransform[5] - nudgeByFactor;
+            break;
+        case "down":
+            affineTransform[5] = affineTransform[5] + nudgeByFactor;
+            break;
+        case "left":
+            affineTransform[4] = affineTransform[4] - nudgeByFactor;
+            break;
+        case "right":
+            affineTransform[4] = affineTransform[4] + nudgeByFactor;
+            break;
+        case "in":
+            affineTransform[0] = affineTransform[0] + zoomByFactor;
+            affineTransform[3] = affineTransform[3] + zoomByFactor;
+            break;
+        case "out":
+            affineTransform[0] = affineTransform[0] - zoomByFactor;
+            affineTransform[3] = affineTransform[3] - zoomByFactor;
+            break;
+        case "reset":
+            resetTransform();
+            break;
+        default:
+            console.log("Unrecognized transform direction");
+            return;
+    }
+    applyTransform();
+}
+
+function resetTransform() {
+    affineTransform[0] = 1;
+    affineTransform[3] = 1;
+    affineTransform[4] = 0;
+    affineTransform[5] = 0;
+}
+
+let originalSvg;
+let transformedSvg;
+let currentWidth;
+let currentHeight;
+let safeWidth;
+let homeY;
+let paperConstraint = null; // {width, height} in mm, or null for full area
+let drawingXOffset = 0;
+let drawingYOffset = 0;
+let margin = {x: 0, y: 0};
+
+export function setPaperSize(width, height) {
+    if (width && height && width > 0 && height > 0) {
+        paperConstraint = {width, height};
+    } else {
+        paperConstraint = null;
+    }
+}
+
+export function getDrawingXOffset() {
+    return drawingXOffset;
+}
+
+export function getDrawingYOffset() {
+    return drawingYOffset;
+}
+
+export function setMargin(x, y) {
+    margin = {x: x || 0, y: y || 0};
+}
+
+export function setSvgString(svgString, currentState) {
+    resetTransform();
+
+    originalSvg = new DOMParser().parseFromString(svgString, 'image/svg+xml');
+    safeWidth = currentState.safeWidth;
+    homeY = currentState.homeY;
+    normalizeSvg();
+    applyTransform();
+}
+
+const transformGroupID = "muralTransformGroup";
+function normalizeSvg() {
+    const svgElement = originalSvg.documentElement;
+    let width, height;
+
+    if (svgElement.hasAttribute("width") && svgElement.hasAttribute("height")) {
+        width = convertUnitsToPx(svgElement.getAttribute("width"));
+        height = convertUnitsToPx(svgElement.getAttribute("height"));
+    }
+
+    if (svgElement.hasAttribute("viewBox")) {
+        if (!width || !height) {
+            const viewBox = svgElement.getAttribute("viewBox").split(/[\s,]/).filter(s => s != "");;
+            width = parseFloat(viewBox[2]);
+            height = parseFloat(viewBox[3]);
+        }
+    } else {
+        svgElement.setAttribute("viewBox", `0, 0, ${width}, ${height}`);
+    }
+
+    if (!width || !height) {
+        throw new Error("Invalid SVG");
+    }
+
+    const svgAspect = width / height;
+
+    // Determine max drawing dimensions, accounting for margins
+    let maxWidth = safeWidth - 2 * margin.x;
+    let maxHeight = Infinity;
+
+    if (paperConstraint) {
+        maxWidth = Math.min(paperConstraint.width - 2 * margin.x, safeWidth - 2 * margin.x);
+        maxHeight = paperConstraint.height - 2 * margin.y;
+    }
+
+    // Fit SVG within max dimensions preserving aspect ratio
+    currentWidth = maxWidth;
+    currentHeight = maxWidth / svgAspect;
+
+    if (currentHeight > maxHeight) {
+        currentHeight = maxHeight;
+        currentWidth = maxHeight * svgAspect;
+    }
+
+    // Center horizontally within drawing area
+    drawingXOffset = (safeWidth - currentWidth) / 2;
+
+    // Center vertically around home position when paper size is set
+    if (paperConstraint && homeY) {
+        drawingYOffset = homeY - currentHeight / 2;
+        if (drawingYOffset < 0) {
+            drawingYOffset = 0;
+        }
+    } else {
+        drawingYOffset = 0;
+    }
+
+    svgElement.setAttribute("width", currentWidth);
+    svgElement.setAttribute("height", currentHeight);
+
+    const transformGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    transformGroup.id = transformGroupID;
+    while (svgElement.firstChild) {
+        transformGroup.appendChild(svgElement.firstChild);
+    }
+    svgElement.appendChild(transformGroup);
+}
+
+function convertUnitsToPx(dimension) {
+    const unitConversionFactors = {
+        pt: 1.3333,    // Points to pixels
+        pc: 16,        // Picas to pixels
+        in: 96,        // Inches to pixels
+        cm: 37.795,    // Centimeters to pixels
+        mm: 3.7795,    // Millimeters to pixels
+        px: 1,         // Pixels to pixels
+    };
+
+    const match = dimension.match(/([\d.]+)([a-z%]*)/i);
+    if (!match) {
+        alert("Invalid SVG");
+        throw new Error(`Invalid dimension: "${dimension}"`);
+    }
+    const value = parseFloat(match[1]);
+    const unit = match[2] || "px"; // Default to pixels if no unit is provided
+    const conversionFactor = unitConversionFactors[unit] || 1;
+    return value * conversionFactor; // Convert to pixels
+}
+
+export function getTargetWidth() {
+    return currentWidth;
+}
+
+export function getTargetHeight() {
+    return currentHeight;
+}
+
+export function getRenderScale() {
+    return renderScale;
+}
+
+export function getRenderSvg() {
+    return makeTransformedSvgWithHeight()[0];
+}
+
+function applyTransform() {
+    updateTransformText();
+
+    const [clonedSvg, newHeight] = makeTransformedSvgWithHeight();
+    currentHeight = newHeight;
+
+    const svgString = new XMLSerializer().serializeToString(clonedSvg);
+    const svgDataURL = `data:image/svg+xml;base64,${btoa(svgString)}`;
+    document.getElementById("sourceSvg").src = svgDataURL;
+
+    transformedSvg = clonedSvg;
+}
+
+function makeTransformedSvgWithHeight() {
+    const clonedSvg = originalSvg.cloneNode(true);
+    const svgElement = clonedSvg.documentElement;
+
+    const viewBox = svgElement.getAttribute("viewBox").split(/[\s,]/).filter(s => s != "");
+    const vbWidth = parseFloat(viewBox[2]);
+    const vbHeight = parseFloat(viewBox[3]);
+
+    const scaledAffine = [...affineTransform];
+    scaledAffine[4] = scaledAffine[4] * vbWidth;
+
+    let newHeight = parseFloat(svgElement.getAttribute("height"));
+    if (scaledAffine[5] > 0) {
+        // when shifting down increase height
+        const heightOffset = scaledAffine[5] * newHeight;
+        newHeight = newHeight + heightOffset;
+        svgElement.setAttribute("height", newHeight);
+
+        scaledAffine[5] = scaledAffine[5] * vbHeight;
+        viewBox[3] = vbHeight + scaledAffine[5];
+        svgElement.setAttribute("viewBox", viewBox.join(", "));
+    } else {
+        scaledAffine[5] = scaledAffine[5] * vbHeight;
+    }
+
+    const transfromGroup = clonedSvg.getElementById(transformGroupID);
+    transfromGroup.setAttribute("transform", `matrix(${scaledAffine.join(", ")})`);
+
+    return [clonedSvg, newHeight];
+}
+
+function updateTransformText() {
+    function normalizeNumber(num) {
+        return +num.toFixed(2);
+    }
+    document.getElementById("transformText").textContent = `(${normalizeNumber(affineTransform[4] * 100)}, ${normalizeNumber(affineTransform[5] * 100)}) ${normalizeNumber(affineTransform[0])}x`;
+}
+
+export async function getCurrentSvgImageData() {
+    const scaledHeight = currentHeight * renderScale;
+    const scaledWidth = currentWidth * renderScale;
+
+    const svgString = new XMLSerializer().serializeToString(transformedSvg);
+
+    const canvas = new OffscreenCanvas(scaledWidth, scaledHeight);
+    const canvasContext = canvas.getContext("2d",);
+    const img = await loadImage(`data:image/svg+xml;base64,${btoa(svgString)}`);
+
+    const bitmap = await createImageBitmap(img, {resizeHeight: scaledHeight, resizeWidth: scaledWidth});
+
+    canvasContext.drawImage(bitmap, 0, 0, scaledWidth, scaledHeight);
+
+    const imageData = canvasContext.getImageData(0, 0, canvas.width, canvas.height);
+
+    return imageData;
+}
+
+async function loadImage(src) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+    });
+}
+
+export function getSvgJson(svgString) {
+    const size = new paper.Size(Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER);
+    paper.setup(size);
+    const svg = paper.project.importSVG(svgString, {
+        expandShapes: true,
+        applyMatrix: true,
+    });
+    const json = svg.exportJSON();
+    paper.project.remove();
+
+    return json;
+}
+
+export function convertJsonToDataURL(json, width, height) {
+    const existing = document.getElementById("previewCanvas");
+    if (existing) existing.remove();
+
+    const canvas = document.createElement("canvas");
+    canvas.id = "previewCanvas";
+    canvas.width = width;
+    canvas.height = height;
+    canvas.style.display = "none";
+    document.body.appendChild(canvas);
+
+    paper.setup(canvas);
+    paper.project.importJSON(json);
+    paper.view.draw();
+
+    const dataURL = canvas.toDataURL();
+
+    paper.project.remove();
+    canvas.remove();
+
+    return dataURL;
+}
