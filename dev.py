@@ -34,6 +34,10 @@ state = {
     "savedPenDistance": 0,
     "drawSpeed": 500,
     "defaultDrawSpeed": 500,
+    "running": False,
+    "progress": -1,
+    "totalDistance": 0,
+    "distanceSoFar": 0,
 }
 
 homed = False
@@ -168,16 +172,18 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/extendToHome":
             homed = True
             set_phase("PenCalibration")
-            # Real firmware returns the move time in seconds as plain text.
-            self._send("1", content_type="text/plain")
+            # Real firmware returns state JSON with an extendTime field (seconds).
+            body = dict(state)
+            body["extendTime"] = 1
+            self._send(json.dumps(body), content_type="application/json")
         elif path == "/setServo":
-            self._send("OK", content_type="text/plain")
+            self._send_state()
         elif path == "/setPenDistance":
             state["savedPenDistance"] = int(float(params.get("angle", 0)))
             set_phase("BeginDrawing")
             self._send_state()
         elif path == "/estepsCalibration":
-            self._send("OK", content_type="text/plain")
+            self._send_state()
         elif path == "/doneWithPhase":
             if state["phase"] == "RetractBelts":
                 set_phase("ExtendToHome")

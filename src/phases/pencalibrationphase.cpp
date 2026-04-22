@@ -9,7 +9,7 @@ void PenCalibrationPhase::setServo(AsyncWebServerRequest *request) {
     const AsyncWebParameter* p = request->getParam(0);
     int angle = p->value().toInt();
     pen->setRawValue(angle);
-    request->send(200, "text/plain", "OK"); 
+    manager->respondWithState(request);
 }
 
 void PenCalibrationPhase::setPenDistance(AsyncWebServerRequest *request) {

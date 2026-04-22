@@ -6,7 +6,7 @@ BeginDrawingPhase::BeginDrawingPhase(PhaseManager* manager, Runner* runner) {
 
 void BeginDrawingPhase::run(AsyncWebServerRequest *request) {
     runner->start();
-    request->send(200, "text/plain", "OK");
+    manager->respondWithState(request);
 }
 
 void BeginDrawingPhase::doneWithPhase(AsyncWebServerRequest *request) {

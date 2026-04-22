@@ -37,5 +37,9 @@ class Runner {
     void run();
     void dryRun();
     void requestStop();
+    bool isRunning();
+    int getProgress();
+    double getTotalDistance();
+    double getDistanceSoFar();
 };
 #endif

@@ -129,6 +129,22 @@ void Runner::requestStop() {
     stopRequested = true;
 }
 
+bool Runner::isRunning() {
+    return !stopped;
+}
+
+int Runner::getProgress() {
+    return stopped ? -1 : progress;
+}
+
+double Runner::getTotalDistance() {
+    return stopped ? 0.0 : totalDistance;
+}
+
+double Runner::getDistanceSoFar() {
+    return stopped ? 0.0 : distanceSoFar;
+}
+
 Task *Runner::getNextTask()
 {
     // Stop requested: drop any queued work and fall through to finishing sequence.

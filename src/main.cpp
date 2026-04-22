@@ -124,7 +124,7 @@ void setup()
             int amount = request->getParam("amount", true)->value().toInt();
             pen->setLiftAmount(amount);
         }
-        request->send(200);
+        handleGetState(request);
     });
 
     server.on("/setDrawSpeed", HTTP_POST, [](AsyncWebServerRequest *request) {
@@ -132,7 +132,7 @@ void setup()
             int speed = request->getParam("speed", true)->value().toInt();
             movement->setDrawSpeed(speed);
         }
-        request->send(200);
+        handleGetState(request);
     });
 
     server.on("/setServoDelay", HTTP_POST, [](AsyncWebServerRequest *request) {
@@ -140,14 +140,14 @@ void setup()
             int ms = request->getParam("delay", true)->value().toInt();
             pen->setServoDelay(ms);
         }
-        request->send(200);
+        handleGetState(request);
     });
 
     server.on("/setServoInversion", HTTP_POST, [](AsyncWebServerRequest *request) {
         if (request->hasParam("inverted", true)) {
             pen->setInverted(request->getParam("inverted", true)->value() == "true");
         }
-        request->send(200);
+        handleGetState(request);
     });
 
     server.on("/setMotorInversion", HTTP_POST, [](AsyncWebServerRequest *request) {
@@ -157,7 +157,7 @@ void setup()
         if (request->hasParam("right", true)) {
             movement->setRightInverted(request->getParam("right", true)->value() == "true");
         }
-        request->send(200);
+        handleGetState(request);
     });
 
     server.on("/setPhase", HTTP_POST, [](AsyncWebServerRequest *request) {

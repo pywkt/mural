@@ -1,7 +1,16 @@
 #include "extendtohomephase.h"
+#include "AsyncJson.h"
+#include "ArduinoJson.h"
+
 void ExtendToHomePhase::extendToHome(AsyncWebServerRequest *request) {
     auto moveTime = movement->extendToHome() + 1; // extra second of waiting for good measure
-    request->send(200, "text/plain", String(moveTime));
+    AsyncResponseStream *response = request->beginResponseStream("application/json");
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject &root = jsonBuffer.createObject();
+    manager->buildStateJson(root);
+    root["extendTime"] = moveTime;
+    root.printTo(*response);
+    request->send(response);
 }
 
 ExtendToHomePhase::ExtendToHomePhase(PhaseManager* manager, Movement* movement) {

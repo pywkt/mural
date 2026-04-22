@@ -19,6 +19,7 @@ PhaseManager::PhaseManager(Movement* movement, Pen* pen, Runner* runner) {
 
     this->movement = movement;
     this->pen = pen;
+    this->runner = runner;
     reset();
 }
 
@@ -58,21 +59,13 @@ void PhaseManager::setPhase(PhaseNames name) {
     }
 }
 
-void PhaseManager::respondWithState(AsyncWebServerRequest *request) {
-    auto currentPhase = getCurrentPhase()->getName();
-    auto moving = movement->isMoving();
-    auto startedHoming = movement->hasStartedHoming();
-    auto homePosition = movement->getHomeCoordinates();
-
+void PhaseManager::buildStateJson(JsonObject& root) {
     auto topDistance = movement->getTopDistance();
     auto safeWidth = topDistance != -1 ? movement->getWidth() : -1;
+    auto homePosition = movement->getHomeCoordinates();
 
-    AsyncResponseStream *response = request->beginResponseStream("application/json");
-    DynamicJsonBuffer jsonBuffer;
-    JsonObject &root = jsonBuffer.createObject();
-
-    root["phase"] = currentPhase;
-    root["moving"] = moving;
+    root["phase"] = getCurrentPhase()->getName();
+    root["moving"] = movement->isMoving();
     root["topDistance"] = topDistance;
     root["safeWidth"] = safeWidth;
     root["homeX"] = homePosition.x;
@@ -86,7 +79,17 @@ void PhaseManager::respondWithState(AsyncWebServerRequest *request) {
     root["savedPenDistance"] = pen->getSavedPenDistance();
     root["drawSpeed"] = movement->getDrawSpeed();
     root["defaultDrawSpeed"] = printSpeedSteps;
+    root["running"] = runner->isRunning();
+    root["progress"] = runner->getProgress();
+    root["totalDistance"] = runner->getTotalDistance();
+    root["distanceSoFar"] = runner->getDistanceSoFar();
+}
 
+void PhaseManager::respondWithState(AsyncWebServerRequest *request) {
+    AsyncResponseStream *response = request->beginResponseStream("application/json");
+    DynamicJsonBuffer jsonBuffer;
+    JsonObject &root = jsonBuffer.createObject();
+    buildStateJson(root);
     root.printTo(*response);
     request->send(response);
 }

@@ -300,8 +300,7 @@ function init() {
         el("extendingSpinner").style.visibility = 'visible';
         try {
             const res = await httpPost("/extendToHome");
-            const extendToHomeTime = parseInt(res);
-            await checkIfExtendedToHome(extendToHomeTime);
+            await checkIfExtendedToHome(res.extendTime);
         } catch {}
     });
 

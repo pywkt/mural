@@ -1,6 +1,7 @@
 #include "commandhandlingphase.h"
 
-CommandHandlingPhase::CommandHandlingPhase(Movement* movement) {
+CommandHandlingPhase::CommandHandlingPhase(PhaseManager* manager, Movement* movement) {
+    this->manager = manager;
     this->movement = movement;
 }
 
@@ -31,9 +32,9 @@ void CommandHandlingPhase::handleCommand(AsyncWebServerRequest *request) {
         movement->rightStepper(0);
     }
     else {
-        request->send(400, "text/plain", "Unsupported command");    
+        request->send(400, "text/plain", "Unsupported command");
         return;
     }
 
-    request->send(200, "text/plain", "OK");
+    manager->respondWithState(request);
 }

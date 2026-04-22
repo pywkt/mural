@@ -1,6 +1,6 @@
 #include "retractbeltsphase.h"
 #include "commandhandlingphase.h"
-RetractBeltsPhase::RetractBeltsPhase(PhaseManager* manager, Movement* movement) : CommandHandlingPhase(movement) {
+RetractBeltsPhase::RetractBeltsPhase(PhaseManager* manager, Movement* movement) : CommandHandlingPhase(manager, movement) {
     this->manager = manager;
     this->movement = movement;
 }
