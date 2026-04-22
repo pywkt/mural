@@ -17,6 +17,7 @@ class Runner {
     void calculateGcodeDistance();
     Task* currentTask;
     bool stopped;
+    volatile bool stopRequested;
     GzipFileReader openedFile;
     double totalDistance;
     double distanceSoFar;
@@ -35,5 +36,6 @@ class Runner {
     void start();
     void run();
     void dryRun();
+    void requestStop();
 };
 #endif

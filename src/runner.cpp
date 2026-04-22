@@ -9,6 +9,7 @@ using namespace std;
 
 Runner::Runner(Movement *movement, Pen *pen, Display *display) {
     stopped = true;
+    stopRequested = false;
     this->movement = movement;
     this->pen = pen;
     this->display = display;
@@ -117,14 +118,27 @@ void Runner::calculateGcodeDistance() {
 }
 
 void Runner::start() {
+    stopRequested = false;
     initTaskProvider();
     currentTask = getNextTask();
     currentTask->startRunning();
     stopped = false;
 }
 
+void Runner::requestStop() {
+    stopRequested = true;
+}
+
 Task *Runner::getNextTask()
 {
+    // Stop requested: drop any queued work and fall through to finishing sequence.
+    // The currently-running task finishes first (run() only calls getNextTask() on isDone()),
+    // so X/Y is up-to-date before the finishing sequence plans the move home.
+    if (stopRequested && pendingTask) {
+        delete pendingTask;
+        pendingTask = nullptr;
+    }
+
     // Return any pending task from G-code parsing (pen change before move)
     if (pendingTask) {
         Task* task = pendingTask;
@@ -132,7 +146,7 @@ Task *Runner::getNextTask()
         return task;
     }
 
-    if (openedFile.available())
+    if (!stopRequested && openedFile.available())
     {
         if (isGcode) {
             Task* task = getNextGcodeTask();

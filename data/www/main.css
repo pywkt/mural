@@ -329,6 +329,19 @@ a:hover {
   background: hsl(38 92% 45%);
 }
 
+.btn-danger {
+  background: var(--destructive);
+  color: var(--primary-fg);
+}
+.btn-danger:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+.btn-danger:disabled {
+  background: var(--muted);
+  color: var(--muted-fg);
+  cursor: not-allowed;
+}
+
 .btn-icon {
   width: auto;
   padding: 0.5rem;

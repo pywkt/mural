@@ -111,6 +111,11 @@ void setup()
     server.on("/run", HTTP_POST, [](AsyncWebServerRequest *request)
               { phaseManager->getCurrentPhase()->run(request); });
 
+    server.on("/stop", HTTP_POST, [](AsyncWebServerRequest *request) {
+        runner->requestStop();
+        handleGetState(request);
+    });
+
     server.on("/resume", HTTP_POST, [](AsyncWebServerRequest *request)
               { phaseManager->getCurrentPhase()->resumeTopDistance(request); });
 

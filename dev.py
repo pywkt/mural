@@ -186,6 +186,11 @@ class Handler(BaseHTTPRequestHandler):
             self._send_state()
         elif path == "/run":
             self._send_state()
+        elif path == "/stop":
+            # Real firmware finishes current move, runs pen-up + home, then restarts.
+            # Mock it by transitioning back to SetTopDistance (what post-reboot state looks like).
+            set_phase("SetTopDistance")
+            self._send_state()
         elif path == "/resume":
             self._send_state()
         elif path == "/setPenLift":

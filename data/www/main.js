@@ -423,9 +423,14 @@ function init() {
         updateTimeEstimate();
     });
 
+    let stopRequestedClient = false;
+
     el("beginDrawing").addEventListener("click", function() {
         hideAll(".muralSlide");
         show("drawingBegan");
+        stopRequestedClient = false;
+        el("stopDrawing").disabled = false;
+        el("stopDrawing").style.display = '';
         httpPost("/run");
 
         const pollInterval = setInterval(async function() {
@@ -433,8 +438,14 @@ function init() {
                 const state = await httpGet("/getState");
                 if (state.phase !== "BeginDrawing") {
                     clearInterval(pollInterval);
-                    el("drawingStatusTitle").textContent = "Drawing Complete";
-                    el("drawingStatusText").textContent = "The drawing has finished and the plotter has returned to the home position.";
+                    if (stopRequestedClient) {
+                        el("drawingStatusTitle").textContent = "Drawing Stopped";
+                        el("drawingStatusText").textContent = "The plotter returned to the home position. You can start a new drawing without re-homing the belts.";
+                    } else {
+                        el("drawingStatusTitle").textContent = "Drawing Complete";
+                        el("drawingStatusText").textContent = "The drawing has finished and the plotter has returned to the home position.";
+                    }
+                    hide("stopDrawing");
                     show("newDrawing");
                     currentState = state;
                 }
@@ -442,6 +453,19 @@ function init() {
                 // ESP may be busy or restarting, keep polling
             }
         }, 5000);
+    });
+
+    el("stopDrawing").addEventListener("click", async function() {
+        if (!confirm("Stop the drawing and return to the home position?")) return;
+        this.disabled = true;
+        stopRequestedClient = true;
+        el("drawingStatusTitle").textContent = "Stopping...";
+        el("drawingStatusText").textContent = "Finishing the current move, lifting the pen, and returning to home.";
+        try {
+            await httpPost("/stop");
+        } catch {
+            // ESP may reboot mid-request; poller will catch the new state
+        }
     });
 
     el("reset").addEventListener("click", function() {
