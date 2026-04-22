@@ -7,6 +7,8 @@ This fork has diverged in two ways from upstream:
 1. The firmware is strictly for **controlling the plotter** — it no longer does SVG processing on-device. The multi-step wizard was replaced with a single-page dashboard, and a lot of quality-of-life features were added.
 2. SVG → `.mural` conversion lives in a separate offsite tool: [svg-to-mural](https://pywkt.github.io/mural/svg-to-mural/). It runs entirely in the browser, outputs a file you upload to the plotter.
 
+Practical upshot: the on-device web UI fits in ~15 KB, so nearly the full 2.8 MB LittleFS partition is available for your uploaded command file. Useful if you plan to plot large or densely-filled drawings.
+
 ## What's Changed
 
 ### Single-page dashboard UI
@@ -15,7 +17,7 @@ The web UI has been rewritten as a single-page card dashboard — one card per p
 
 ### Gzip compression
 
-Static web assets are gzipped at build time; uploaded command files are gzipped in the browser (via `CompressionStream`) and stream-decompressed on the ESP32 at drawing time using the ROM-resident `tinfl_decompress` (no library dependency). Typical command files compress by ~70%.
+Static web assets are gzipped at build time; uploaded command files are gzipped in the browser (via `CompressionStream`) and stream-decompressed on the ESP32 at drawing time using the ROM-resident `tinfl_decompress` (no library dependency). Typical command files compress by ~70%, and the web UI itself lands at ~15 KB gzipped on LittleFS.
 
 ### New features
 
