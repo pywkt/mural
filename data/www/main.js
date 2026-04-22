@@ -423,48 +423,26 @@ function init() {
         updateTimeEstimate();
     });
 
-    let stopRequestedClient = false;
-
     el("beginDrawing").addEventListener("click", function() {
         hideAll(".muralSlide");
         show("drawingBegan");
-        stopRequestedClient = false;
         el("stopDrawing").disabled = false;
         el("stopDrawing").style.display = '';
+        // No polling during a draw — each /getState response briefly steals main-loop
+        // CPU from the stepper task and causes visible motion stutter. User reloads
+        // manually once the plot finishes (or the plotter restarts post-stop).
         httpPost("/run");
-
-        const pollInterval = setInterval(async function() {
-            try {
-                const state = await httpGet("/getState");
-                if (state.phase !== "BeginDrawing") {
-                    clearInterval(pollInterval);
-                    if (stopRequestedClient) {
-                        el("drawingStatusTitle").textContent = "Drawing Stopped";
-                        el("drawingStatusText").textContent = "The plotter returned to the home position. You can start a new drawing without re-homing the belts.";
-                    } else {
-                        el("drawingStatusTitle").textContent = "Drawing Complete";
-                        el("drawingStatusText").textContent = "The drawing has finished and the plotter has returned to the home position.";
-                    }
-                    hide("stopDrawing");
-                    show("newDrawing");
-                    currentState = state;
-                }
-            } catch {
-                // ESP may be busy or restarting, keep polling
-            }
-        }, 5000);
     });
 
     el("stopDrawing").addEventListener("click", async function() {
         if (!confirm("Stop the drawing and return to the home position?")) return;
         this.disabled = true;
-        stopRequestedClient = true;
         el("drawingStatusTitle").textContent = "Stopping...";
-        el("drawingStatusText").textContent = "Finishing the current move, lifting the pen, and returning to home.";
+        el("drawingStatusText").textContent = "Finishing the current move, lifting the pen, and returning home. The plotter will restart when it reaches home — wait ~15 seconds, then reload to start a new drawing.";
         try {
             await httpPost("/stop");
         } catch {
-            // ESP may reboot mid-request; poller will catch the new state
+            // ESP may reboot mid-request; the user will reload manually
         }
     });
 
