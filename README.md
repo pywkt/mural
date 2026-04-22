@@ -122,3 +122,7 @@ The plotter accepts two command formats:
 ### Mural's Kinematic Model
 
 See [KinematicModel.md](KinematicModel.md).
+
+## License
+
+Licensed under **[CC BY-NC 4.0](LICENSE.md)** (Creative Commons Attribution-NonCommercial 4.0), inherited from the upstream [Mural](https://github.com/nikivanov/mural) project. Non-commercial use only; attribution required.
