@@ -38,31 +38,73 @@ A gear icon in the page header opens a tools modal with:
 
 An info icon next to it opens a separate Debug modal with uptime, free heap, Wi-Fi, and filesystem stats.
 
-## Building
+## Repo layout
 
-This is a [PlatformIO](https://platformio.org/) project. All the web UI assets are vanilla HTML/CSS/JS — no worker build step.
+```
+src/              ESP32 firmware (C++ / PlatformIO)
+include/          firmware headers
+lib/              firmware-side libraries
+data/www/         plotter web UI (flashed into LittleFS)
+tsc/              TypeScript source for the svg-to-mural worker
+docs/svg-to-mural/ the offsite SVG converter (served by GitHub Pages)
+build.py          PlatformIO extra script — stages and gzips data/www into the LittleFS image
+dev.py            local mock server for iterating on the plotter UI (no flash needed)
+platformio.ini    PlatformIO project config
+partitions.csv    ESP32 partition layout
+```
 
-To flash the firmware and upload the filesystem:
+## Firmware & plotter UI
+
+This is a [PlatformIO](https://platformio.org/) project. The plotter web UI is vanilla HTML/CSS/JS — no build step on that side.
+
+Flash firmware and upload filesystem:
 
 ```
 pio run -t upload
 pio run -t uploadfs
 ```
 
-To iterate on the web UI locally without flashing, run the dev mock server:
+Iterate on the plotter UI locally without flashing (stubs the ESP32 HTTP API):
 
 ```
 python3 dev.py
 ```
 
-It serves `data/www/` and stubs the ESP32 HTTP API so you can walk through the full flow in a browser.
+Then visit <http://localhost:8000/>.
 
-## Converting SVGs
+## The svg-to-mural tool
 
-The plotter only accepts pre-generated command files. To convert an SVG:
+The plotter only accepts pre-generated command files. The companion tool at **[svg-to-mural](https://pywkt.github.io/mural/svg-to-mural/)** converts an SVG into a `.mural` file entirely in the browser (upload an SVG, pick paper size / infill / renderer, download the result). Source lives under `docs/svg-to-mural/`.
 
-- Use the **[svg-to-mural](https://pywkt.github.io/mural/svg-to-mural/)** tool (hosted on GitHub Pages, runs entirely in the browser). Upload an SVG, pick paper size / infill / renderer options, download a `.mural` file.
-- Or use any other source that emits the Mural command format (see [PLOTTER_COMMAND_FORMAT.md](PLOTTER_COMMAND_FORMAT.md)) or G-code.
+### Running the tool locally
+
+Workers need an HTTP origin — `file://` won't work. From the repo root:
+
+```
+cd docs/svg-to-mural
+python3 -m http.server
+```
+
+Then visit <http://localhost:8000/>.
+
+### Rebuilding the worker
+
+The worker is a webpack bundle of `tsc/` TypeScript source. Rebuild when you change anything in `tsc/`:
+
+```
+docs/svg-to-mural/build.sh
+```
+
+This installs npm deps if needed, runs `npm run build` in `tsc/`, and copies the built `worker.js` + `paper-full.min.js` into `docs/svg-to-mural/`. Commit the updated artifacts.
+
+### Deploying to GitHub Pages (one-time)
+
+1. Push `main` to GitHub.
+2. In the repo settings: **Settings → Pages**.
+3. **Source**: "Deploy from a branch" → **Branch**: `main`, **Folder**: `/docs`.
+4. Save. Tool will be live at `https://pywkt.github.io/mural/svg-to-mural/` within a minute. This URL is the one linked from the plotter's Artwork card.
+
+Alternative sources of command files — any tool that emits Mural format (see [PLOTTER_COMMAND_FORMAT.md](PLOTTER_COMMAND_FORMAT.md)) or G-code.
 
 ## Command Format
 

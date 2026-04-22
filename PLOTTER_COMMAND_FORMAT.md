@@ -4,6 +4,8 @@
 
 The Mural plotter accepts a plain text command file that describes pen movements in 2D space. Each line contains one command. The plotter reads the file top to bottom, executing each command sequentially.
 
+Most users don't write this format by hand — the [svg-to-mural](https://pywkt.github.io/mural/svg-to-mural/) tool (or any G-code source) generates it. This document is for anyone building a new generator.
+
 ## File Structure
 
 ```
