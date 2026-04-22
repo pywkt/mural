@@ -796,11 +796,21 @@ label {
 }
 
 /* Tool-specific */
+.img-thumbnail {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.25rem;
+  max-width: 100%;
+  width: 100%;
+  background: #ffffff;
+}
+
 .tool-body {
   text-align: left;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  padding-bottom: 3rem;
 }
 
 .form-section {
