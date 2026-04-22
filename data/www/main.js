@@ -722,7 +722,8 @@ function adaptToState(state) {
             el("extendToHome").disabled = isHoming;
             el("extendingSpinner").style.visibility = isHoming ? 'visible' : 'hidden';
             const extendIdx = PHASE_ORDER.indexOf("ExtendToHome");
-            el("skipExtend").style.display = (maxPhaseIdx > extendIdx && !isHoming) ? "" : "none";
+            const canSkip = maxPhaseIdx > extendIdx || state.savedTopDistance > 0;
+            el("skipExtend").style.display = (canSkip && !isHoming) ? "" : "none";
             if (isHoming) checkIfExtendedToHome();
             break;
         }
@@ -739,7 +740,8 @@ function adaptToState(state) {
             hideAll(".muralSlide");
             show("commandsUploadSlide");
             const svgIdx = PHASE_ORDER.indexOf("SvgSelect");
-            el("continueArtwork").style.display = (maxPhaseIdx > svgIdx) ? "" : "none";
+            const canContinue = maxPhaseIdx > svgIdx || state.savedTopDistance > 0;
+            el("continueArtwork").style.display = canContinue ? "" : "none";
             break;
         }
         case "BeginDrawing":
