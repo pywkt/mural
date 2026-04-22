@@ -273,7 +273,7 @@ void setup()
 
     Serial.println("Finished setting up the server");
 
-    phaseManager = new PhaseManager(movement, pen, runner, &server);
+    phaseManager = new PhaseManager(movement, pen, runner);
 
     server.begin();
     Serial.println("Server started");

@@ -1,14 +1,12 @@
 #include "begindrawingphase.h"
-BeginDrawingPhase::BeginDrawingPhase(PhaseManager* manager, Runner* runner, AsyncWebServer* server) {
+BeginDrawingPhase::BeginDrawingPhase(PhaseManager* manager, Runner* runner) {
     this->manager = manager;
     this->runner = runner;
-    this->server = server;
 }
 
 void BeginDrawingPhase::run(AsyncWebServerRequest *request) {
     runner->start();
-    request->send(200, "text/plain", "OK"); 
-    server->end();
+    request->send(200, "text/plain", "OK");
 }
 
 void BeginDrawingPhase::doneWithPhase(AsyncWebServerRequest *request) {
