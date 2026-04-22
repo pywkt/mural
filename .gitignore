@@ -1,7 +1,6 @@
 .pio
 .DS_Store
 .venv
-.vscode/c_cpp_properties.json
 .serena
 .claude
 tsc/node_modules
