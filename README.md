@@ -97,13 +97,6 @@ docs/svg-to-mural/build.sh
 
 This installs npm deps if needed, runs `npm run build` in `tsc/`, and copies the built `worker.js` + `paper-full.min.js` into `docs/svg-to-mural/`. Commit the updated artifacts.
 
-### Deploying to GitHub Pages (one-time)
-
-1. Push `main` to GitHub.
-2. In the repo settings: **Settings → Pages**.
-3. **Source**: "Deploy from a branch" → **Branch**: `main`, **Folder**: `/docs`.
-4. Save. Tool will be live at `https://pywkt.github.io/mural/svg-to-mural/` within a minute. This URL is the one linked from the plotter's Artwork card.
-
 Alternative sources of command files — any tool that emits Mural format (see [PLOTTER_COMMAND_FORMAT.md](PLOTTER_COMMAND_FORMAT.md)) or G-code.
 
 ## Command Format
