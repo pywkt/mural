@@ -306,12 +306,14 @@ A decent client recovery loop:
 
 ### Upload size and gzip
 
-LittleFS has ~300 KB free after the web UI is installed. Gzipped
-`.mural` files are small (~1 byte per segment), so this is almost
-never the limit — but if you're compressing client-side with anything
-other than browser `CompressionStream`, make sure the payload is a
-single gzip stream (not a multi-member concat) because
-`GzipFileReader` only reads one member.
+LittleFS gets the 2800 KB partition defined in `partitions.csv`. The
+web UI takes ~15 KB of that (gzipped), so roughly 2.7 MB is free for
+`commands.gz`. Gzipped `.mural` files are tiny (a few bytes per
+segment), so this is almost never the limit — but if you're
+compressing client-side with anything other than browser
+`CompressionStream`, make sure the payload is a single gzip stream
+(not a multi-member concat) because `GzipFileReader` only reads one
+member.
 
 ### There is no authentication
 
