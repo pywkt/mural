@@ -8,8 +8,9 @@ and sends `.mural` files) should target.
 ## Connection
 
 - After the device joins WiFi, it advertises itself over mDNS as
-  `mural.local`. If mDNS isn't available on your network, the IP is
-  shown on the OLED at boot and in the captive portal.
+  `mural.local`. If mDNS isn't available on your network, check your
+  router's DHCP leases for the IP, or look it up on first boot via
+  the WiFiManager captive portal.
 - Base URL: `http://mural.local/` or `http://<device-ip>/`
 - No auth. The device assumes a trusted LAN.
 - Content-Type for mutating requests: `application/x-www-form-urlencoded`

@@ -9,7 +9,6 @@
 #include "movement.h"
 #include "runner.h"
 #include "pen.h"
-#include "display.h"
 #include "phases/phasemanager.h"
 #include "AsyncJson.h"
 #include "ArduinoJson.h"
@@ -20,7 +19,6 @@ AsyncWebServer server(80);
 Movement *movement;
 Runner *runner;
 Pen *pen;
-Display *display;
 
 PhaseManager* phaseManager;
 
@@ -48,11 +46,8 @@ void setup()
         return;
     }
 
-    display = new Display();
-    Serial.println("Initialized display");
-
     // initialize movement right away or the motors can start creeping due to floating output
-    movement = new Movement(display);
+    movement = new Movement();
     Serial.println("Initialized steppers");
 
     bool resetAfterConnect = false;
@@ -82,7 +77,7 @@ void setup()
     pen = new Pen();
     Serial.println("Initialized servo");
 
-    runner = new Runner(movement, pen, display);
+    runner = new Runner(movement, pen);
     Serial.println("Initialized runner");
 
     server.serveStatic("/", LittleFS, "/www/").setDefaultFile("index.html").setCacheControl("no-cache");
@@ -277,8 +272,6 @@ void setup()
 
     server.begin();
     Serial.println("Server started");
-
-    display->displayHomeScreen("http://" + WiFi.localIP().toString(), "or", "http://mural.local");
 
     // Subscribe the main loop task to the task watchdog with a generous timeout
     esp_task_wdt_init(30, true);  // 30 second timeout, panic on trigger

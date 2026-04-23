@@ -3,14 +3,12 @@
 #include "movement.h"
 #include "tasks/task.h"
 #include "pen.h"
-#include "display.h"
 #include "LittleFS.h"
 #include "gzipfilereader.h"
 class Runner {
     private:
     Movement *movement;
     Pen *pen;
-    Display *display;
     void initTaskProvider();
     Task* getNextTask();
     Task* getNextGcodeTask();
@@ -32,7 +30,7 @@ class Runner {
     double lastGcX;
     double lastGcY;
     public:
-    Runner(Movement *movement, Pen *pen, Display *display);
+    Runner(Movement *movement, Pen *pen);
     void start();
     void run();
     void dryRun();

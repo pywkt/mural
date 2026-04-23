@@ -4,7 +4,6 @@
 #include "AccelStepper.h"
 #include "Arduino.h"
 #include <Preferences.h>
-#include "display.h"
 
 // Motor driver parameters.
 constexpr int printSpeedSteps = 500;
@@ -63,7 +62,6 @@ private:
     bool startedHoming;
     AccelStepper *leftMotor;
     AccelStepper *rightMotor;
-    Display *display;
     Preferences preferences;
     bool leftInverted;
     bool rightInverted;
@@ -95,7 +93,7 @@ private:
     double getDilationCorrectedBeltLength(double belt_length, double F_belt) const;
     
 public:
-    Movement(Display *display);
+    Movement();
     struct Point {
         double x;
         double y;

@@ -3,16 +3,14 @@
 #include "tasks/interpolatingmovementtask.h"
 #include "tasks/pentask.h"
 #include "pen.h"
-#include "display.h"
 #include "LittleFS.h"
 using namespace std;
 
-Runner::Runner(Movement *movement, Pen *pen, Display *display) {
+Runner::Runner(Movement *movement, Pen *pen) {
     stopped = true;
     stopRequested = false;
     this->movement = movement;
     this->pen = pen;
-    this->display = display;
     pendingTask = nullptr;
     isGcode = false;
     gcPenDown = false;
@@ -298,7 +296,6 @@ void Runner::run()
             if (progress != newProgress) {
                 Serial.println("Progress: " + String(newProgress));
                 progress = newProgress;
-                display->displayText(String(progress) + "%");
             }
 
         }

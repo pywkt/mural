@@ -1,11 +1,8 @@
 #include "movement.h"
-#include "display.h"
 #include <stdexcept>
 
-Movement::Movement(Display *display)
+Movement::Movement()
 {
-    this->display = display;
-   
     preferences.begin("mural", false);
     leftInverted = preferences.getBool("leftInv", true);
     rightInverted = preferences.getBool("rightInv", false);
@@ -390,9 +387,6 @@ float Movement::beginLinearTravel(double x, double y, int speed)
     
     rightMotor->moveTo(rightLegSteps);
     rightMotor->setSpeed(rightSpeed);
-
-    //display->displayText(String(X) + ", " + String(Y));
-    // delay(sleepDurationAfterMove_ms);
 
     moving = true;
     return moveTime;
