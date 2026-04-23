@@ -22,7 +22,7 @@ Static web assets are gzipped at build time; uploaded command files are gzipped 
 ### New features
 
 - **Quick Start** — Skip the full setup and resume immediately if the plotter is still at its home position. Top distance and pen calibration are cached in NVS.
-- **Drawing completion detection** — The UI polls the ESP32 and notifies you when a drawing finishes.
+- **Stop & Return Home** — Abort a drawing mid-plot from the UI; the runner finishes its current segment, lifts the pen, returns to home, then restarts. No need to power-cycle and re-home the belts when something snags. Once the plot finishes (or stops), reload the page to start the next one.
 - **Paper size selection** — Choose from Letter, A4, A3 (portrait/landscape) or enter custom dimensions. Used to center `.mural` uploads on the chosen paper.
 - **Margins** — Configurable X/Y margins applied during centering.
 - **G-code support** — Upload `.gcode`, `.nc`, or `.ngc` files alongside `.mural`. The firmware auto-detects the format and parses `G0`/`G1` (movement) and `M3`/`M5` (pen control) commands.
@@ -40,19 +40,27 @@ A gear icon in the page header opens a tools modal with:
 
 An info icon next to it opens a separate Debug modal with uptime, free heap, Wi-Fi, and filesystem stats.
 
+## HTTP API
+
+The plotter is driven by a small HTTP server on port 80. Every step the web UI takes is also available to external programs, which makes it straightforward to drive the plotter from your own app. The full reference lives in [docs/API.md](docs/API.md): phase state machine, every endpoint grouped by category, the `.mural` file format, the G-code subset, and a few client gotchas — notably, polling `/getState` during a draw causes visible motion stutter (each response steals main-loop CPU), and the device reboots after every plot.
+
+A single-file Python example lives at [examples/drive.py](examples/drive.py) — stdlib only, with `state` / `cold` / `warm` / `stop` subcommands. It works against a real plotter at `mural.local` or against `dev.py` for offline iteration.
+
 ## Repo layout
 
 ```
-src/              ESP32 firmware (C++ / PlatformIO)
-include/          firmware headers
-lib/              firmware-side libraries
-data/www/         plotter web UI (flashed into LittleFS)
-tsc/              TypeScript source for the svg-to-mural worker
+src/               ESP32 firmware (C++ / PlatformIO)
+include/           firmware headers
+lib/               firmware-side libraries
+data/www/          plotter web UI (flashed into LittleFS)
+tsc/               TypeScript source for the svg-to-mural worker
+docs/API.md        HTTP API reference for external controllers
 docs/svg-to-mural/ the offsite SVG converter (served by GitHub Pages)
-build.py          PlatformIO extra script — stages and gzips data/www into the LittleFS image
-dev.py            local mock server for iterating on the plotter UI (no flash needed)
-platformio.ini    PlatformIO project config
-partitions.csv    ESP32 partition layout
+examples/          example external driver (Python) + a sample .mural file
+build.py           PlatformIO extra script — stages and gzips data/www into the LittleFS image
+dev.py             local mock server for iterating on the plotter UI (no flash needed)
+platformio.ini     PlatformIO project config
+partitions.csv     ESP32 partition layout
 ```
 
 ## Firmware & plotter UI
